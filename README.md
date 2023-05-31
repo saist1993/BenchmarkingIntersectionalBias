@@ -1,0 +1,2 @@
+# BenchmarkingIntersectionalBias
+Benchmarking variou approaches for intersectional fairness over intersectional fairness framework
