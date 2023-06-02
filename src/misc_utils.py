@@ -6,9 +6,7 @@ from pathlib import Path
 from models import base_models
 from typing import Optional, Dict
 
-import config
-from utils.misc import CustomError
-from dataset_parser import twitter_hate_speech, gaussian_dataset, simple_classification_dataset, numeracy
+from dataset_parser import twitter_hate_speech
 
 
 def get_logger(unique_id_for_run, log_file_name: Optional[str], log_dir, runner_arguments) -> None:
@@ -111,7 +109,7 @@ def generate_raw_dataset(dataset_name: str, **kwargs):
         kwargs['dataset_location'] = Path(
             '../datasets/Multilingual-Hate-Speech-LREC-Huang-2019-data/data/split/English')
         dataset_creator = twitter_hate_speech.DatasetTwitterHateSpeech(dataset_name=dataset_name, **kwargs)
-        iterators, other_meta_data = dataset_creator.run()
+        return dataset_creator.run()
     elif dataset_name.lower() in 'gaussian_toy':
         dataset_creator = gaussian_dataset.GaussianDataset(dataset_name=dataset_name, **kwargs)
         iterators, other_meta_data = dataset_creator.run()
