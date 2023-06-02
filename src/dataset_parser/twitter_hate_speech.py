@@ -208,6 +208,7 @@ class DatasetTwitterHateSpeech:
             return seen
 
         s_list_to_int = flatten(np.vstack([train_s, valid_s, test_s]))
+
         parsed_dataset = ParsedDataset(
             input_dim=train_X.shape[1],
             dataset_name=self.dataset_name,
@@ -224,7 +225,8 @@ class DatasetTwitterHateSpeech:
             s_int_to_list={value: key for key, value in s_list_to_int.items()},
             number_of_main_task_label=len(np.unique(train_y)),
             number_of_aux_label_per_attribute=[len(np.unique(train_s[:, i])) for i in
-                                               range(train_s.shape[1])]
+                                               range(train_s.shape[1])],
+            all_groups=[tuple(key) for key, value in s_list_to_int.items()]
         )
 
         return parsed_dataset

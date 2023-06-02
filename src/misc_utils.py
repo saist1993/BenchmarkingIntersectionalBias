@@ -100,6 +100,29 @@ def set_seed(seed: int) -> None:
     torch.backends.cudnn.benchmark = False
 
 
+def generate_mask(all_s, mask_pattern):
+    """
+    This generates masks over all_s with the specified mask patter mask_pattern
+    The mask_pattern in of the type (1,1,1,1) or [1,1,1,1] and not its flattened representation
+    """
+
+    keep_indices = []
+
+    for index, i in enumerate(mask_pattern):
+        if i != 'x':
+            keep_indices.append(i == all_s[:, index])
+        else:
+            keep_indices.append(np.ones_like(all_s[:, 0], dtype='bool'))
+
+    mask = np.ones_like(all_s[:, 0], dtype='bool')
+
+    # mask = [np.logical_and(mask, i) for i in keep_indices]
+
+    for i in keep_indices:
+        mask = np.logical_and(mask, i)
+    return mask
+
+
 def generate_raw_dataset(dataset_name: str, **kwargs):
     """
     This function just reads the dataset, pre-processes it, and finally returns a clean
@@ -110,20 +133,5 @@ def generate_raw_dataset(dataset_name: str, **kwargs):
             '../datasets/Multilingual-Hate-Speech-LREC-Huang-2019-data/data/split/English')
         dataset_creator = twitter_hate_speech.DatasetTwitterHateSpeech(dataset_name=dataset_name, **kwargs)
         return dataset_creator.run()
-    elif dataset_name.lower() in 'gaussian_toy':
-        dataset_creator = gaussian_dataset.GaussianDataset(dataset_name=dataset_name, **kwargs)
-        iterators, other_meta_data = dataset_creator.run()
-    elif 'adult_multi_group' in dataset_name.lower() or 'celeb_multigroup_v' in dataset_name.lower():
-        dataset_creator = simple_classification_dataset.SimpleClassificationDataset(dataset_name=dataset_name, **kwargs)
-        iterators, other_meta_data = dataset_creator.run()
-    elif dataset_name.lower() in ['adult']:
-        dataset_creator = simple_classification_dataset.SimpleClassificationDataset(dataset_name=dataset_name, **kwargs)
-        iterators, other_meta_data = dataset_creator.run()
-    elif "numeracy" in dataset_name.lower():
-        kwargs['dataset_location'] = config.numeracy_path[0]
-        dataset_creator = numeracy.SimpleClassificationDataset(dataset_name=dataset_name, **kwargs)
-        iterators, other_meta_data = dataset_creator.run()
     else:
-        raise CustomError("No such dataset")
-
-    return iterators, other_meta_data
+        raise NotImplementedError

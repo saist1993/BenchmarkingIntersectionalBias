@@ -1,5 +1,6 @@
+import torch
 import numpy as np
-from typing import NamedTuple, Optional, List, Dict
+from typing import NamedTuple, Optional, List, Dict, Callable
 
 
 class RunnerArguments(NamedTuple):
@@ -51,3 +52,19 @@ class ParsedDataset(NamedTuple):
     s_int_to_list: Dict
     number_of_main_task_label: int
     number_of_aux_label_per_attribute: List[int]
+    all_groups: List[tuple]
+
+
+class TrainingLoopParameters(NamedTuple):
+    n_epochs: int
+    model: torch.nn.Module
+    iterators: Dict
+    optimizer: torch.optim
+    criterion: Callable
+    device: torch.device
+    use_wandb: bool
+    other_params: Dict
+    save_model_as: Optional[str]
+    fairness_function: str
+    unique_id_for_run: str
+    log_run: bool = True
