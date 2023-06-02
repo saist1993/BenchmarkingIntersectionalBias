@@ -5,7 +5,7 @@ import numpy as np
 from pathlib import Path
 from models import base_models
 from typing import Optional, Dict
-
+from arguments import ParsedDataset
 from dataset_parser import twitter_hate_speech
 
 
@@ -35,10 +35,11 @@ def get_logger(unique_id_for_run, log_file_name: Optional[str], log_dir, runner_
     logger.addHandler(fileHandler)
 
 
-def get_model(method: str, model_name: str, other_meta_data: Dict, device: torch.device, use_batch_norm: float = 0.0,
+def get_model(method: str, model_name: str, other_meta_data: ParsedDataset, device: torch.device,
+              attribute_id: Optional[int] = None,
+              use_batch_norm: float = 0.0,
               use_dropout: float = 0.0):
-    number_of_aux_label_per_attribute = other_meta_data['number_of_aux_label_per_attribute']
-    attribute_id = other_meta_data['attribute_id']
+    number_of_aux_label_per_attribute = other_meta_data.number_of_aux_label_per_attribute
     if attribute_id is not None:
         number_of_aux_label_per_attribute = [number_of_aux_label_per_attribute[attribute_id]]
 
@@ -46,8 +47,8 @@ def get_model(method: str, model_name: str, other_meta_data: Dict, device: torch
 
         model_arch = {
             'encoder': {
-                'input_dim': other_meta_data['input_dim'],
-                'output_dim': other_meta_data['number_of_main_task_label']
+                'input_dim': other_meta_data.input_dim,
+                'output_dim': other_meta_data.number_of_main_task_label
             }
         }
 
@@ -59,7 +60,7 @@ def get_model(method: str, model_name: str, other_meta_data: Dict, device: torch
         }
 
         if 'adversarial_single' in method:
-            total_adv_dim = len(other_meta_data['s_flatten_lookup'])
+            total_adv_dim = len(other_meta_data.s_list_to_int)
             model_params['model_arch']['adv'] = {'output_dim': [total_adv_dim]}
             model = base_models.SimpleNonLinear(model_params)
         elif method in ['adversarial_group', 'adversarial_group_with_fairness_loss']:
@@ -135,3 +136,17 @@ def generate_raw_dataset(dataset_name: str, **kwargs):
         return dataset_creator.run()
     else:
         raise NotImplementedError
+
+
+def get_fairness_related_meta_dict(parsed_dataset: ParsedDataset, fairness_measure, fairness_rate, epsilon):
+    all_train_y, all_train_s = parsed_dataset.train_y, parsed_dataset.train_s
+
+    fairness_related_info = {
+        'y_train': all_train_y,
+        's_train': all_train_s,
+        'fairness_measure': fairness_measure,
+        'fairness_rate': fairness_rate,
+        'epsilon': epsilon
+    }
+
+    return fairness_related_info

@@ -33,6 +33,7 @@ class RunnerArguments(NamedTuple):
     negative_gen_model: str = "gen_model_negative_numeracy_10_simple.pt"
     log_dir: str = '../logs'
     standard_scalar: bool = True
+    iterator_type: str = "simple_iterator"
 
 
 class ParsedDataset(NamedTuple):
@@ -57,14 +58,15 @@ class ParsedDataset(NamedTuple):
 
 class TrainingLoopParameters(NamedTuple):
     n_epochs: int
-    model: torch.nn.Module
-    iterators: Dict
-    optimizer: torch.optim
-    criterion: Callable
-    device: torch.device
-    use_wandb: bool
+    batch_size: int
     other_params: Dict
-    save_model_as: Optional[str]
+    iterator_type: str
+    optimizer: Callable
+    criterion: Callable
+    per_group_size: int
+    device: torch.device
+    model: torch.nn.Module
     fairness_function: str
     unique_id_for_run: str
     log_run: bool = True
+    save_model_as: Optional[str] = None

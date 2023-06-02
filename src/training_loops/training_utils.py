@@ -168,9 +168,11 @@ class CreateSimpleIterators:
 
 class GroupIterators:
 
-    def __init__(self, parsed_dataset: ParsedDataset, batch_size: int):
+    def __init__(self, parsed_dataset: ParsedDataset, batch_size: int, iterator_type: str, shuffle: bool):
         self.parsed_dataset = parsed_dataset
         self.batch_size = batch_size
+        self.iterator_type = iterator_type
+        self.shuffle = shuffle
 
     def common_procedure(self, mask, size):
         relevant_index = []
@@ -179,7 +181,8 @@ class GroupIterators:
                                                size=size,
                                                replace=True).tolist()
 
-        random.shuffle(relevant_index)
+        if self.shuffle:
+            random.shuffle(relevant_index)
 
         relevant_aux = torch.LongTensor(self.parsed_dataset.train_s[relevant_index])
         relevant_aux_flatten = [self.parsed_dataset.s_list_to_int[tuple(i)] for i in relevant_aux]
@@ -209,3 +212,12 @@ class GroupIterators:
 
         mask = generate_mask(self.parsed_dataset.train_s, group)
         return self.common_procedure(mask=[mask], size=self.batch_size)
+
+    def get_iterators(self):
+        if self.iterator_type == "sample_data_with_y":
+            return self.sample_data_with_y
+        elif self.iterator_type == "sameple_data_without_y":
+            return self.sample_data_without_y
+        else:
+            raise NotImplementedError
+
