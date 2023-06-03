@@ -2,9 +2,37 @@ import torch
 import random
 import numpy as np
 from typing import Optional, List
-from arguments import ParsedDataset
 from misc_utils import generate_mask
+from arguments import ParsedDataset, TrainingLoopParameters
 from utils.iterator import sequential_transforms, TextClassificationDataset
+
+
+def get_iterators(training_loop_parameters: TrainingLoopParameters, parsed_dataset: ParsedDataset):
+    if training_loop_parameters.iterator_type == "simple_iterator":
+        csi = CreateSimpleIterators(
+            parsed_dataset=parsed_dataset,
+            batch_size=training_loop_parameters.batch_size,
+            per_group_size=training_loop_parameters.per_group_size)
+        original_train_iterator, train_iterator, valid_iterator, test_iterator = csi.get_iterators()
+    elif training_loop_parameters.iterator_type == "group_iterator":
+        csi = CreateSimpleIterators(
+            parsed_dataset=parsed_dataset,
+            batch_size=training_loop_parameters.batch_size,
+            per_group_size=-1)
+        original_train_iterator, _, valid_iterator, test_iterator = csi
+
+        if training_loop_parameters.fairness_function in ["demographic_parity"]:
+            iterator_type = "sample_data_without_y"
+        elif training_loop_parameters.fairness_function in ["equal_odds", "equal_opportunity"]:
+            iterator_type = "sample_data_with_y"
+        else:
+            raise NotImplementedError
+
+        gi = GroupIterators(parsed_dataset=parsed_dataset, batch_size=training_loop_parameters.batch_size,
+                            iterator_type=iterator_type, shuffle=True)  # set shuffle False for MixUp Regularizer
+        train_iterator = gi.get_iterators()
+
+    return original_train_iterator, train_iterator, valid_iterator, test_iterator
 
 
 def resample_dataset(all_X, all_y, all_s, per_group_size):

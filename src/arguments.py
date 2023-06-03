@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from dataclasses import dataclass
 from typing import NamedTuple, Optional, List, Dict, Callable
 
 
@@ -70,3 +71,40 @@ class TrainingLoopParameters(NamedTuple):
     unique_id_for_run: str
     log_run: bool = True
     save_model_as: Optional[str] = None
+
+
+class SimpleTrainParameters(NamedTuple):
+    model: torch.nn.Module
+    iterator: Dict
+    optimizer: torch.optim
+    criterion: Callable
+    device: torch.device
+    other_params: Dict
+    per_epoch_metric: Optional[Callable]
+    fairness_function: str
+
+
+class EpochMetric(NamedTuple):
+    predictions: np.asarray
+    labels: np.asarray
+    s: np.asarray
+    fairness_function: str
+
+
+class EPSFairnessMetric(NamedTuple):
+    intersectional_smoothed: List
+    intersectional_simple_bayesian: List
+    intersectional_bootstrap: List
+    intersectional_smoothed_bias_amplification: float = 0.0
+    intersectional_simple_bayesian_bias_amplification: float = 0.0
+    intersectional_bootstrap_bias_amplification: float = 0.0
+
+
+class EpochMetricTracker(NamedTuple):
+    accuracy: float
+    balanced_accuracy: float
+    eps_fairness: Dict[str, EPSFairnessMetric]
+    loss: Optional[float] = None
+    epoch_number: Optional[int] = None,
+    group_wise_accuracy: Dict = None,
+    other_info: Optional[Dict] = None

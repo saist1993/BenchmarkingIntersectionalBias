@@ -1,6 +1,33 @@
+import torch
 import logging
-from arguments import TrainingLoopParameters, ParsedDataset
-from .training_utils import CreateSimpleIterators, GroupIterators
+from tqdm.auto import tqdm
+from .training_utils import get_iterators
+from arguments import TrainingLoopParameters, ParsedDataset, SimpleTrainParameters
+
+
+def train(train_parameters: SimpleTrainParameters):
+    model, optimizer, device, criterion = \
+        train_parameters.model, train_parameters.optimizer, train_parameters.device, train_parameters.criterion
+
+    model.train()
+
+    track_output = []
+
+    for items in tqdm(train_parameters.iterator):
+        for key in items.keys():
+            items[key] = items[key].to(device)
+
+        optimizer.zero_grad()
+        output = model(items)
+        loss = criterion(output['prediction'], items['labels'], items['aux_flattened'], mode='train')
+        loss = torch.mean(loss)
+        loss.backward()
+        optimizer.step()
+        track_output.append(output)
+
+    model.eval()
+
+    return None, None
 
 
 def orchestrator(training_loop_parameters: TrainingLoopParameters, parsed_dataset: ParsedDataset):
@@ -20,31 +47,26 @@ def orchestrator(training_loop_parameters: TrainingLoopParameters, parsed_datase
     all_valid_eps_metrics = []
 
     # create the iterator
+    original_train_iterator, train_iterator, valid_iterator, test_iterator = get_iterators(training_loop_parameters,
+                                                                                           parsed_dataset)
 
-    if training_loop_parameters.iterator_type == "simple_iterator":
-        csi = CreateSimpleIterators(
-            parsed_dataset=parsed_dataset,
-            batch_size=training_loop_parameters.batch_size,
-            per_group_size=training_loop_parameters.per_group_size)
-        original_train_iterator, train_iterator, valid_iterator, test_iterator = csi.get_iterators()
-    elif training_loop_parameters.iterator_type == "group_iterator":
-        csi = CreateSimpleIterators(
-            parsed_dataset=parsed_dataset,
-            batch_size=training_loop_parameters.batch_size,
-            per_group_size=-1)
-        original_train_iterator, _, valid_iterator, test_iterator = csi
+    for ep in range(training_loop_parameters.n_epochs):
+        if logger: logger.info("start of epoch block")
 
-        if training_loop_parameters.fairness_function in ["demographic_parity"]:
-            iterator_type = "sample_data_without_y"
-        elif training_loop_parameters.fairness_function in ["equal_odds", "equal_opportunity"]:
-            iterator_type = "sample_data_with_y"
-        else:
-            raise NotImplementedError
+        train_params = SimpleTrainParameters(
+            model=training_loop_parameters.model,
+            iterator=train_iterator,
+            optimizer=training_loop_parameters.optimizer,
+            criterion=training_loop_parameters.criterion,
+            device=training_loop_parameters.device,
+            other_params={},
+            per_epoch_metric=None,
+            fairness_function=training_loop_parameters.fairness_function)
 
-        gi = GroupIterators(parsed_dataset=parsed_dataset, batch_size=training_loop_parameters.batch_size,
-                            iterator_type=iterator_type, shuffle=True)  # set shuffle False for MixUp Regularizer
-        train_iterator = gi.get_iterators()
+        _, _ = train(train_parameters=train_params)
 
-    # for ep in range(training_loop_parameters.n_epochs):
-    #     if logger:
-    #         logger.info("start of epoch block")
+
+
+
+
+
