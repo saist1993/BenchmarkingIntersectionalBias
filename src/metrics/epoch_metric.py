@@ -9,7 +9,7 @@ class CalculateEpochMetric:
     """Calculates epoch level metric"""
 
     def __init__(self, epoch_metric: EpochMetric):
-        self.epoch_metric = EpochMetric
+        self.epoch_metric = epoch_metric
 
     def run(self):
         overall_accuracy = accuracy_score(y_true=self.epoch_metric.labels, y_pred=self.epoch_metric.predictions)
@@ -38,9 +38,9 @@ class CalculateEpochMetric:
                                                      y_pred=self.epoch_metric.predictions[negative_label_mask])
 
             group_wise_accuracy[tuple(group)] = [np.sum(group_mask), np.sum(positive_label_mask),
-                                                 np.sum(negative_label_mask), group_accuracy,
-                                                 group_balanced_accuracy, positive_group_accuracy,
-                                                 negative_group_accuracy]
+                                                 np.sum(negative_label_mask), round(group_accuracy, 4),
+                                                 round(group_balanced_accuracy, 4), round(positive_group_accuracy, 4),
+                                                 round(negative_group_accuracy, 4)]
 
         eps_fairness_metric = EpsFairness(prediction=self.epoch_metric.predictions, label=self.epoch_metric.labels,
                                           aux=self.epoch_metric.s,

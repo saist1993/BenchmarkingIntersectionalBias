@@ -5,6 +5,7 @@ import arguments
 import shortuuid
 import misc_utils
 from pathlib import Path
+from typing import Optional
 from training_loops import simple_training_loop
 from fairgrad.torch import CrossEntropyLoss as fairgrad_CrossEntropyLoss
 
@@ -75,10 +76,11 @@ def runner(runner_arguments: arguments.RunnerArguments):
         save_model_as=None,
         fairness_function=runner_arguments.fairness_function,
         unique_id_for_run=unique_id_for_run,
-        batch_size=64,
+        batch_size=runner_arguments.batch_size,
         per_group_size=1000,
-        log_run=False,
-        iterator_type=runner_arguments.iterator_type)
+        log_run=True,
+        iterator_type=runner_arguments.iterator_type,
+        number_of_iterations=int(parsed_dataset.train_X.shape[0] / runner_arguments.batch_size))
 
     simple_training_loop.orchestrator(training_loop_parameters=training_loop_params, parsed_dataset=parsed_dataset)
 

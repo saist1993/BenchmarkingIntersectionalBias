@@ -19,7 +19,7 @@ def get_iterators(training_loop_parameters: TrainingLoopParameters, parsed_datas
             parsed_dataset=parsed_dataset,
             batch_size=training_loop_parameters.batch_size,
             per_group_size=-1)
-        original_train_iterator, _, valid_iterator, test_iterator = csi
+        original_train_iterator, _, valid_iterator, test_iterator = csi.get_iterators()
 
         if training_loop_parameters.fairness_function in ["demographic_parity"]:
             iterator_type = "sample_data_without_y"
@@ -88,6 +88,26 @@ def resample_dataset(all_X, all_y, all_s, per_group_size):
     return resampled_X, resampled_y, resampled_s, size_of_each_group
 
 
+def collect_output(all_batch_outputs: List, all_batch_inputs: List):
+    all_label = []
+    all_prediction = []
+    all_loss = []
+    all_s = []
+
+    for batch_output, batch_input in zip(all_batch_outputs, all_batch_inputs):
+        all_prediction.append(batch_output['prediction'].detach().numpy())
+        all_loss.append(batch_output['loss_batch'])
+        all_label.append(batch_input['labels'].numpy())
+        all_s.append(batch_input['aux'].numpy())
+
+    all_prediction = np.vstack(all_prediction).argmax(1)
+    all_label = np.hstack(all_label)
+    all_s = np.vstack(all_s)
+    all_loss = np.mean(all_loss)
+
+    return all_prediction, all_label, all_s, all_loss
+
+
 class CreateSimpleIterators:
     """ A general purpose iterators. Takes numpy matrix for train, dev, and test matrix and creates iterator."""
 
@@ -105,7 +125,7 @@ class CreateSimpleIterators:
     def collate(self, batch):
         labels, encoded_input, aux = zip(*batch)
         labels = torch.LongTensor(labels)
-        aux_flattened = torch.LongTensor(self.parsed_dataset.s_list_to_int[tuple(aux)])
+        aux_flattened = torch.LongTensor([self.parsed_dataset.s_list_to_int[tuple(i)] for i in aux])
         aux = torch.LongTensor(np.asarray(aux))
         lengths = torch.LongTensor([len(x) for x in encoded_input])
         encoded_input = torch.FloatTensor(np.asarray(encoded_input))
@@ -213,7 +233,7 @@ class GroupIterators:
             random.shuffle(relevant_index)
 
         relevant_aux = torch.LongTensor(self.parsed_dataset.train_s[relevant_index])
-        relevant_aux_flatten = [self.parsed_dataset.s_list_to_int[tuple(i)] for i in relevant_aux]
+        relevant_aux_flatten = [self.parsed_dataset.s_list_to_int[tuple(i.detach().numpy())] for i in relevant_aux]
 
         batch_input = {
             'labels': torch.LongTensor(self.parsed_dataset.train_y[relevant_index]),
@@ -229,10 +249,10 @@ class GroupIterators:
             group = random.choice(self.parsed_dataset.all_groups)
 
         mask = generate_mask(self.parsed_dataset.train_s, group)
-        positive_mask = np.logical_and(mask, self.parsed_dataset.test_y == 1)
-        negative_mask = np.logical_and(mask, self.parsed_dataset.test_y == 0)
+        positive_mask = np.logical_and(mask, self.parsed_dataset.train_y == 1)
+        negative_mask = np.logical_and(mask, self.parsed_dataset.train_y == 0)
 
-        return self.common_procedure(mask=[positive_mask, negative_mask], size=self.batch_size / 2)
+        return self.common_procedure(mask=[positive_mask, negative_mask], size=int(self.batch_size / 2))
 
     def sample_data_without_y(self, group: Optional[List] = None):
         if not group:
@@ -248,4 +268,3 @@ class GroupIterators:
             return self.sample_data_without_y
         else:
             raise NotImplementedError
-

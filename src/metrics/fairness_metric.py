@@ -370,7 +370,7 @@ class EpsFairness():
             if bias_amplification_mode:
                 self.prediction = self.original_prediction
 
-            output.append([(list(i), np.sum(j), k) for i, j, k in
+            output.append([(list(i), np.sum(j), round(k, 4)) for i, j, k in
                            zip(self.all_possible_groups, self.all_possible_groups_mask, output[2])])
 
             output.pop(2)

@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from dataclasses import dataclass
-from typing import NamedTuple, Optional, List, Dict, Callable
+from typing import NamedTuple, Optional, List, Dict, Callable, Union
 
 
 @dataclass
@@ -35,7 +35,7 @@ class RunnerArguments():
     negative_gen_model: str = "gen_model_negative_numeracy_10_simple.pt"
     log_dir: str = '../logs'
     standard_scalar: bool = True
-    iterator_type: str = "simple_iterator"
+    iterator_type: str = "group_iterator"
 
 
 @dataclass
@@ -74,18 +74,20 @@ class TrainingLoopParameters():
     unique_id_for_run: str
     log_run: bool = True
     save_model_as: Optional[str] = None
+    number_of_iterations: int = 100
 
 
 @dataclass
 class SimpleTrainParameters():
     model: torch.nn.Module
-    iterator: Dict
+    iterator: Union[Dict, Callable]
     optimizer: torch.optim
     criterion: Callable
     device: torch.device
     other_params: Dict
     per_epoch_metric: Optional[Callable]
     fairness_function: str
+    number_of_iterations: int = 0
 
 
 @dataclass
