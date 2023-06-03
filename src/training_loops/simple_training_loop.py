@@ -1,10 +1,11 @@
 import torch
 import logging
+import numpy as np
 from tqdm.auto import tqdm
 from metrics import epoch_metric
 from fairgrad.torch import CrossEntropyLoss as fairgrad_CrossEntropyLoss
-from .training_utils import get_iterators, collect_output, get_fairness_related_meta_dict
 from arguments import TrainingLoopParameters, ParsedDataset, SimpleTrainParameters, EpochMetric
+from .training_utils import get_iterators, collect_output, get_fairness_related_meta_dict, mixup_sub_routine
 
 
 def train_simple(train_parameters: SimpleTrainParameters):
@@ -82,6 +83,60 @@ def train_group(train_parameters: SimpleTrainParameters):
     return emo
 
 
+def train_mixup_regularizer(train_parameters: SimpleTrainParameters):
+    model, optimizer, device, criterion = \
+        train_parameters.model, train_parameters.optimizer, train_parameters.device, train_parameters.criterion
+
+    model.train()
+
+    track_output = []
+    track_input = []
+
+    for _ in tqdm(range(train_parameters.number_of_iterations)):
+        group1, group2 = train_parameters.all_unique_groups[
+            np.random.choice(len(train_parameters.all_unique_groups), 2, False)]
+        items_group_1 = train_parameters.iterator(group1)
+        items_group_2 = train_parameters.iterator(group2)
+
+        for key in items_group_1.keys():
+            items_group_1[key] = items_group_1[key].to(device)
+
+        for key in items_group_2.keys():
+            items_group_2[key] = items_group_2[key].to(device)
+
+        optimizer.zero_grad()
+        output_group_1 = model(items_group_1)
+        output_group_2 = model(items_group_2)
+        loss_group_1 = criterion(output_group_1['prediction'], items_group_1['labels'], items_group_1['aux_flattened'],
+                                 mode='train')
+        loss_group_2 = criterion(output_group_2['prediction'], items_group_2['labels'], items_group_2['aux_flattened'],
+                                 mode='train')
+
+        reg_loss = train_parameters.regularization_lambda * mixup_sub_routine(train_parameters, items_group_1,
+                                                                              items_group_2, model)
+        loss = torch.mean(loss_group_1) + torch.mean(loss_group_2) + reg_loss
+
+        loss.backward()
+        optimizer.step()
+
+        output_group_1['loss_batch'] = loss.item()
+        track_output.append(output_group_1)
+        track_input.append(items_group_1)
+
+    model.eval()
+    predictions, labels, s, loss = collect_output(all_batch_outputs=track_output, all_batch_inputs=track_input)
+    em = EpochMetric(
+        predictions=predictions,
+        labels=labels,
+        s=s,
+        fairness_function=train_parameters.fairness_function)
+
+    emo = epoch_metric.CalculateEpochMetric(epoch_metric=em).run()
+    emo.loss = loss
+
+    return emo
+
+
 def test(train_parameters: SimpleTrainParameters):
     model, optimizer, device, criterion = \
         train_parameters.model, train_parameters.optimizer, train_parameters.device, train_parameters.criterion
@@ -133,8 +188,15 @@ def orchestrator(training_loop_parameters: TrainingLoopParameters, parsed_datase
     all_valid_eps_metrics = []
 
     # create the iterator
+    if training_loop_parameters.method == "mixup_regularizer":
+        assert training_loop_parameters.iterator_type == "group_iterator"
+        shuffle = False
+    else:
+        shuffle = True
+
     original_train_iterator, train_iterator, valid_iterator, test_iterator = get_iterators(training_loop_parameters,
-                                                                                           parsed_dataset)
+                                                                                           parsed_dataset,
+                                                                                           shuffle=shuffle)
 
     if training_loop_parameters.method == "fairgrad":
         assert training_loop_parameters.iterator_type == "simple_iterator"
@@ -157,7 +219,9 @@ def orchestrator(training_loop_parameters: TrainingLoopParameters, parsed_datase
             other_params={},
             per_epoch_metric=None,
             fairness_function=training_loop_parameters.fairness_function,
-            number_of_iterations=training_loop_parameters.number_of_iterations)
+            number_of_iterations=training_loop_parameters.number_of_iterations,
+            all_unique_groups=parsed_dataset.all_groups,
+            regularization_lambda=training_loop_parameters.regularization_lambda)
 
         if training_loop_parameters.iterator_type == "simple_iterator":
             train_emo = train_simple(train_parameters=train_params)

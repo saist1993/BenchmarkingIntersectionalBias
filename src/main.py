@@ -74,7 +74,8 @@ def runner(runner_arguments: arguments.RunnerArguments):
         log_run=True,
         iterator_type=runner_arguments.iterator_type,
         number_of_iterations=int(parsed_dataset.train_X.shape[0] / runner_arguments.batch_size),
-        method=runner_arguments.method)
+        method=runner_arguments.method,
+        regularization_lambda=runner_arguments.regularization_lambda)
 
     simple_training_loop.orchestrator(training_loop_parameters=training_loop_params, parsed_dataset=parsed_dataset)
 

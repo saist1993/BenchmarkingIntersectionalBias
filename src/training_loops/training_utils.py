@@ -1,13 +1,14 @@
 import torch
 import random
 import numpy as np
+from numpy.random import beta
 from typing import Optional, List
 from misc_utils import generate_mask
 from arguments import ParsedDataset, TrainingLoopParameters
 from utils.iterator import sequential_transforms, TextClassificationDataset
 
 
-def get_iterators(training_loop_parameters: TrainingLoopParameters, parsed_dataset: ParsedDataset):
+def get_iterators(training_loop_parameters: TrainingLoopParameters, parsed_dataset: ParsedDataset, shuffle=True):
     if training_loop_parameters.iterator_type == "simple_iterator":
         csi = CreateSimpleIterators(
             parsed_dataset=parsed_dataset,
@@ -29,7 +30,7 @@ def get_iterators(training_loop_parameters: TrainingLoopParameters, parsed_datas
             raise NotImplementedError
 
         gi = GroupIterators(parsed_dataset=parsed_dataset, batch_size=training_loop_parameters.batch_size,
-                            iterator_type=iterator_type, shuffle=True)  # set shuffle False for MixUp Regularizer
+                            iterator_type=iterator_type, shuffle=shuffle)  # set shuffle False for MixUp Regularizer
         train_iterator = gi.get_iterators()
 
     return original_train_iterator, train_iterator, valid_iterator, test_iterator
@@ -290,3 +291,66 @@ class GroupIterators:
             return self.sample_data_without_y
         else:
             raise NotImplementedError
+
+
+def mixup_sub_routine(train_tilted_params, items_group_0, items_group_1, model):
+    alpha = 1.0
+    gamma = beta(alpha, alpha)
+
+    if train_tilted_params.fairness_function == 'demographic_parity':
+        batch_x_mix = items_group_0['input'] * gamma + items_group_1['input'] * (1 - gamma)
+        batch_x_mix = batch_x_mix.requires_grad_(True)
+        output_mixup = model({'input': batch_x_mix})
+        gradx = torch.autograd.grad(output_mixup['prediction'].sum(), batch_x_mix, create_graph=True)[
+            0]  # may be .sum()
+
+        batch_x_d = items_group_1['input'] - items_group_0['input']
+        grad_inn = (gradx * batch_x_d).sum(1)
+        E_grad = grad_inn.mean(0)
+        if train_tilted_params.other_params['method'] == 'only_mixup_with_loss_group':
+            loss_reg = torch.abs(E_grad) / torch.mean(loss[len(items_group_0['input']):])
+        else:
+            loss_reg = torch.abs(E_grad)
+
+    elif train_tilted_params.fairness_function == 'equal_odds' or \
+            train_tilted_params.fairness_function == 'equal_opportunity':
+        split_index = int(train_tilted_params.other_params['batch_size'] / 2)
+        if train_tilted_params.fairness_function == 'equal_odds':
+            gold_labels = [0, 1]
+        elif train_tilted_params.fairness_function == 'equal_opportunity':
+            gold_labels = [1]
+        else:
+            raise NotImplementedError
+        loss_reg = 0
+        for i in gold_labels:
+            if i == 0:
+                index_start = 0
+                index_end = split_index
+            elif i == 1:
+                index_start = split_index
+                index_end = -1
+            else:
+                raise NotImplementedError("only support binary labels!")
+
+            batch_x_mix = items_group_0['input'][index_start:index_end] * gamma + items_group_1['input'][
+                                                                                  index_start:index_end] * (
+                                  1 - gamma)
+            batch_x_mix = batch_x_mix.requires_grad_(True)
+            output_mixup = model({'input': batch_x_mix})
+            gradx = torch.autograd.grad(output_mixup['prediction'].sum(), batch_x_mix, create_graph=True)[
+                0]  # may be .sum()
+
+            batch_x_d = items_group_1['input'][index_start:index_end] - items_group_0['input'][
+                                                                        index_start:index_end]
+            grad_inn = (gradx * batch_x_d).sum(1)
+            E_grad = grad_inn.mean(0)
+            if train_tilted_params.other_params['method'] == 'only_mixup_with_loss_group':
+                loss_reg = loss_reg + torch.abs(E_grad) / torch.mean(loss[index_start:index_end])
+            else:
+                loss_reg = loss_reg + torch.abs(E_grad)
+            # loss_reg = loss_reg + torch.abs(E_grad)
+
+    else:
+        raise NotImplementedError
+
+    return loss_reg

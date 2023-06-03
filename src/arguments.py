@@ -15,7 +15,7 @@ class RunnerArguments():
     model: str = "simple_non_linear"
     epochs: int = 20
     save_model_as: Optional[str] = None
-    method: str = 'fairgrad'
+    method: str = 'mixup_regularizer'
     optimizer_name: str = 'adam'
     lr: float = 0.001
     use_wandb: bool = False  # For legacy purpose. Not in the current codebase
@@ -35,7 +35,8 @@ class RunnerArguments():
     negative_gen_model: str = "gen_model_negative_numeracy_10_simple.pt"
     log_dir: str = '../logs'
     standard_scalar: bool = True
-    iterator_type: str = "simple_iterator"
+    iterator_type: str = "group_iterator"
+    regularization_lambda: float = 0.0
 
 
 @dataclass
@@ -76,19 +77,22 @@ class TrainingLoopParameters():
     save_model_as: Optional[str] = None
     number_of_iterations: int = 100
     method: str = "unconstrained"
+    regularization_lambda: Optional[float] = 0.0
 
 
 @dataclass
 class SimpleTrainParameters():
-    model: torch.nn.Module
-    iterator: Union[Dict, Callable]
-    optimizer: torch.optim
     criterion: Callable
-    device: torch.device
     other_params: Dict
-    per_epoch_metric: Optional[Callable]
+    device: torch.device
+    model: torch.nn.Module
+    optimizer: torch.optim
     fairness_function: str
+    iterator: Union[Dict, Callable]
+    per_epoch_metric: Optional[Callable]
     number_of_iterations: int = 0
+    all_unique_groups: Optional[List] = None
+    regularization_lambda: Optional[float] = 0.0
 
 
 @dataclass
