@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from typing import NamedTuple, Optional, List, Dict, Callable
 
 
-class RunnerArguments(NamedTuple):
+@dataclass
+class RunnerArguments():
     """Arguments for the main function
     @TODO: clean this arguments files a bit!
     """
@@ -37,7 +38,8 @@ class RunnerArguments(NamedTuple):
     iterator_type: str = "simple_iterator"
 
 
-class ParsedDataset(NamedTuple):
+@dataclass
+class ParsedDataset():
     """Output of parsed dataset"""
     input_dim: int
     dataset_name: str
@@ -57,7 +59,8 @@ class ParsedDataset(NamedTuple):
     all_groups: List[tuple]
 
 
-class TrainingLoopParameters(NamedTuple):
+@dataclass
+class TrainingLoopParameters():
     n_epochs: int
     batch_size: int
     other_params: Dict
@@ -73,7 +76,8 @@ class TrainingLoopParameters(NamedTuple):
     save_model_as: Optional[str] = None
 
 
-class SimpleTrainParameters(NamedTuple):
+@dataclass
+class SimpleTrainParameters():
     model: torch.nn.Module
     iterator: Dict
     optimizer: torch.optim
@@ -84,14 +88,16 @@ class SimpleTrainParameters(NamedTuple):
     fairness_function: str
 
 
-class EpochMetric(NamedTuple):
+@dataclass
+class EpochMetric():
     predictions: np.asarray
     labels: np.asarray
     s: np.asarray
     fairness_function: str
 
 
-class EPSFairnessMetric(NamedTuple):
+@dataclass
+class EPSFairnessMetric():
     intersectional_smoothed: List
     intersectional_simple_bayesian: List
     intersectional_bootstrap: List
@@ -100,7 +106,8 @@ class EPSFairnessMetric(NamedTuple):
     intersectional_bootstrap_bias_amplification: float = 0.0
 
 
-class EpochMetricTracker(NamedTuple):
+@dataclass
+class EpochMetricOutput():
     accuracy: float
     balanced_accuracy: float
     eps_fairness: Dict[str, EPSFairnessMetric]

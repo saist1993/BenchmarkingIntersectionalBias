@@ -1,7 +1,7 @@
 import numpy as np
-from arguments import EpochMetric
 from misc_utils import generate_mask
 from .fairness_metric import EpsFairness
+from arguments import EpochMetric, EpochMetricOutput
 from sklearn.metrics import accuracy_score, balanced_accuracy_score
 
 
@@ -47,3 +47,9 @@ class CalculateEpochMetric:
                                           all_possible_groups=all_unique_groups,
                                           all_possible_groups_mask=all_unique_groups_masks,
                                           fairness_mode=[self.epoch_metric.fairness_function]).run()
+
+        emo = EpochMetricOutput(accuracy=overall_accuracy, balanced_accuracy=overall_balanced_accuracy,
+                                eps_fairness=eps_fairness_metric, loss=0.0, epoch_number=0,
+                                group_wise_accuracy=group_wise_accuracy, other_info=None)
+
+        return emo
