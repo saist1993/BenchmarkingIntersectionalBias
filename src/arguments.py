@@ -11,7 +11,7 @@ class RunnerArguments():
     """
     seed: int = 50
     dataset_name: str = "twitter_hate_speech"
-    batch_size: int = 64
+    batch_size: int = 1024
     model: str = "simple_non_linear"
     epochs: int = 20
     save_model_as: Optional[str] = None
