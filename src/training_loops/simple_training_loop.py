@@ -305,3 +305,7 @@ def orchestrator(training_loop_parameters: TrainingLoopParameters, parsed_datase
         test_emo = test(train_parameters=test_params)
         test_emo.epoch_number = ep
         if logger: logger.info(f"test epoch metric: {test_emo}")
+
+        if logger: logger.info("end of epoch block")
+
+        return training_loop_parameters.model
