@@ -136,17 +136,3 @@ def generate_raw_dataset(dataset_name: str, **kwargs):
         return dataset_creator.run()
     else:
         raise NotImplementedError
-
-
-def get_fairness_related_meta_dict(parsed_dataset: ParsedDataset, fairness_measure, fairness_rate, epsilon):
-    all_train_y, all_train_s = parsed_dataset.train_y, parsed_dataset.train_s
-
-    fairness_related_info = {
-        'y_train': all_train_y,
-        's_train': all_train_s,
-        'fairness_measure': fairness_measure,
-        'fairness_rate': fairness_rate,
-        'epsilon': epsilon
-    }
-
-    return fairness_related_info

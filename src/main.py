@@ -57,14 +57,7 @@ def runner(runner_arguments: arguments.RunnerArguments):
         optimizer = torch.optim.Adam(model.parameters(), lr=runner_arguments.lr)
 
     # get criterion
-    if runner_arguments.method == 'fairgrad':
-        fairness_related_meta_data = misc_utils.get_fairness_related_meta_dict(parsed_dataset,
-                                                                               runner_arguments.fairness_function,
-                                                                               fairness_rate=0.01,
-                                                                               epsilon=0.0)
-        criterion = fairgrad_CrossEntropyLoss(reduction='none', **fairness_related_meta_data)
-    else:
-        criterion = fairgrad_CrossEntropyLoss(reduction='none')
+    criterion = fairgrad_CrossEntropyLoss(reduction='none')
 
     training_loop_params = arguments.TrainingLoopParameters(
         n_epochs=runner_arguments.epochs,
@@ -77,10 +70,11 @@ def runner(runner_arguments: arguments.RunnerArguments):
         fairness_function=runner_arguments.fairness_function,
         unique_id_for_run=unique_id_for_run,
         batch_size=runner_arguments.batch_size,
-        per_group_size=1000,
+        per_group_size=runner_arguments.per_group_label_number_of_examples,
         log_run=True,
         iterator_type=runner_arguments.iterator_type,
-        number_of_iterations=int(parsed_dataset.train_X.shape[0] / runner_arguments.batch_size))
+        number_of_iterations=int(parsed_dataset.train_X.shape[0] / runner_arguments.batch_size),
+        method=runner_arguments.method)
 
     simple_training_loop.orchestrator(training_loop_parameters=training_loop_params, parsed_dataset=parsed_dataset)
 

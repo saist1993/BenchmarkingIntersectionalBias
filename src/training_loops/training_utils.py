@@ -108,6 +108,28 @@ def collect_output(all_batch_outputs: List, all_batch_inputs: List):
     return all_prediction, all_label, all_s, all_loss
 
 
+def get_fairness_related_meta_dict(iterator, fairness_measure, fairness_rate, epsilon):
+    all_label = []
+    all_s_flat = []
+
+    for batch_input in iterator:
+        all_label.append(batch_input['labels'].numpy())
+        all_s_flat.append(batch_input['aux_flattened'].numpy())
+
+    all_label = np.hstack(all_label)
+    all_s_flat = np.hstack(all_s_flat)
+
+    fairness_related_info = {
+        'y_train': all_label,
+        's_train': all_s_flat,
+        'fairness_measure': fairness_measure,
+        'fairness_rate': fairness_rate,
+        'epsilon': epsilon
+    }
+
+    return fairness_related_info
+
+
 class CreateSimpleIterators:
     """ A general purpose iterators. Takes numpy matrix for train, dev, and test matrix and creates iterator."""
 
