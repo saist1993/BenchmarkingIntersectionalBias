@@ -15,7 +15,7 @@ class RunnerArguments():
     model: str = "simple_non_linear"
     epochs: int = 20
     save_model_as: Optional[str] = None
-    method: str = 'mixup_regularizer'
+    method: str = 'adversarial_single'
     optimizer_name: str = 'adam'
     lr: float = 0.001
     use_wandb: bool = False  # For legacy purpose. Not in the current codebase
@@ -35,7 +35,7 @@ class RunnerArguments():
     negative_gen_model: str = "gen_model_negative_numeracy_10_simple.pt"
     log_dir: str = '../logs'
     standard_scalar: bool = True
-    iterator_type: str = "group_iterator"
+    iterator_type: str = "simple_iterator"
     regularization_lambda: float = 0.0
 
 
@@ -91,6 +91,7 @@ class SimpleTrainParameters():
     iterator: Union[Dict, Callable]
     per_epoch_metric: Optional[Callable]
     number_of_iterations: int = 0
+    batch_size: Optional[int] = 1024
     all_unique_groups: Optional[List] = None
     regularization_lambda: Optional[float] = 0.0
 

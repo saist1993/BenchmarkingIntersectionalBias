@@ -92,7 +92,7 @@ class AdversarialSingle(nn.Module):
         # Generalizing this to n-adversarial
         adv_dims = params['model_arch']['adv']['output_dim']  # List with n adversarial output!
 
-        dropout = self.use_dropout
+        dropout = params['use_dropout']
 
         self.encoder = nn.Sequential(
             nn.Linear(input_dim, 256),

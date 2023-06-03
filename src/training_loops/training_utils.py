@@ -314,7 +314,7 @@ def mixup_sub_routine(train_tilted_params, items_group_0, items_group_1, model):
 
     elif train_tilted_params.fairness_function == 'equal_odds' or \
             train_tilted_params.fairness_function == 'equal_opportunity':
-        split_index = int(train_tilted_params.other_params['batch_size'] / 2)
+        split_index = int(train_tilted_params.batch_size / 2)
         if train_tilted_params.fairness_function == 'equal_odds':
             gold_labels = [0, 1]
         elif train_tilted_params.fairness_function == 'equal_opportunity':
@@ -344,10 +344,7 @@ def mixup_sub_routine(train_tilted_params, items_group_0, items_group_1, model):
                                                                         index_start:index_end]
             grad_inn = (gradx * batch_x_d).sum(1)
             E_grad = grad_inn.mean(0)
-            if train_tilted_params.other_params['method'] == 'only_mixup_with_loss_group':
-                loss_reg = loss_reg + torch.abs(E_grad) / torch.mean(loss[index_start:index_end])
-            else:
-                loss_reg = loss_reg + torch.abs(E_grad)
+            loss_reg = loss_reg + torch.abs(E_grad)
             # loss_reg = loss_reg + torch.abs(E_grad)
 
     else:

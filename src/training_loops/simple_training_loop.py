@@ -93,8 +93,8 @@ def train_mixup_regularizer(train_parameters: SimpleTrainParameters):
     track_input = []
 
     for _ in tqdm(range(train_parameters.number_of_iterations)):
-        group1, group2 = train_parameters.all_unique_groups[
-            np.random.choice(len(train_parameters.all_unique_groups), 2, False)]
+        index = np.random.choice(len(train_parameters.all_unique_groups), 2, False)
+        group1, group2 = train_parameters.all_unique_groups[index[0]], train_parameters.all_unique_groups[index[1]]
         items_group_1 = train_parameters.iterator(group1)
         items_group_2 = train_parameters.iterator(group2)
 
@@ -122,6 +122,45 @@ def train_mixup_regularizer(train_parameters: SimpleTrainParameters):
         output_group_1['loss_batch'] = loss.item()
         track_output.append(output_group_1)
         track_input.append(items_group_1)
+
+    model.eval()
+    predictions, labels, s, loss = collect_output(all_batch_outputs=track_output, all_batch_inputs=track_input)
+    em = EpochMetric(
+        predictions=predictions,
+        labels=labels,
+        s=s,
+        fairness_function=train_parameters.fairness_function)
+
+    emo = epoch_metric.CalculateEpochMetric(epoch_metric=em).run()
+    emo.loss = loss
+
+    return emo
+
+
+def train_adversarial_single(train_parameters: SimpleTrainParameters):
+    model, optimizer, device, criterion = \
+        train_parameters.model, train_parameters.optimizer, train_parameters.device, train_parameters.criterion
+
+    model.train()
+
+    track_output = []
+    track_input = []
+
+    for items in tqdm(train_parameters.iterator):
+        for key in items.keys():
+            items[key] = items[key].to(device)
+
+        optimizer.zero_grad()
+        output = model(items)
+        loss = criterion(output['prediction'], items['labels'], items['aux_flattened'], mode='train')
+        adv_loss = train_parameters.regularization_lambda * torch.mean(
+            criterion(output['adv_outputs'][0], items['aux_flattened']))
+        loss = torch.mean(loss) + adv_loss
+        loss.backward()
+        optimizer.step()
+        output['loss_batch'] = loss.item()
+        track_output.append(output)
+        track_input.append(items)
 
     model.eval()
     predictions, labels, s, loss = collect_output(all_batch_outputs=track_output, all_batch_inputs=track_input)
@@ -221,14 +260,20 @@ def orchestrator(training_loop_parameters: TrainingLoopParameters, parsed_datase
             fairness_function=training_loop_parameters.fairness_function,
             number_of_iterations=training_loop_parameters.number_of_iterations,
             all_unique_groups=parsed_dataset.all_groups,
-            regularization_lambda=training_loop_parameters.regularization_lambda)
+            regularization_lambda=training_loop_parameters.regularization_lambda,
+            batch_size=training_loop_parameters.batch_size)
 
-        if training_loop_parameters.iterator_type == "simple_iterator":
-            train_emo = train_simple(train_parameters=train_params)
-        elif training_loop_parameters.iterator_type == "group_iterator":
-            train_emo = train_group(train_parameters=train_params)
+        if training_loop_parameters.method == "mixup_regularizer":
+            train_emo = train_mixup_regularizer(train_parameters=train_params)
+        elif training_loop_parameters.method == "adversarial_single":
+            train_emo = train_adversarial_single(train_parameters=train_params)
         else:
-            raise NotImplementedError
+            if training_loop_parameters.iterator_type == "simple_iterator":
+                train_emo = train_simple(train_parameters=train_params)
+            elif training_loop_parameters.iterator_type == "group_iterator":
+                train_emo = train_group(train_parameters=train_params)
+            else:
+                raise NotImplementedError
 
         train_emo.epoch_number = ep
         if logger: logger.info(f"train epoch metric: {train_emo}")

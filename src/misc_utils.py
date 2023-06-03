@@ -62,10 +62,10 @@ def get_model(method: str, model_name: str, other_meta_data: ParsedDataset, devi
         if 'adversarial_single' in method:
             total_adv_dim = len(other_meta_data.s_list_to_int)
             model_params['model_arch']['adv'] = {'output_dim': [total_adv_dim]}
-            model = base_models.SimpleNonLinear(model_params)
+            model = base_models.AdversarialSingle(model_params)
         elif method in ['adversarial_group', 'adversarial_group_with_fairness_loss']:
             model_params['model_arch']['adv'] = {'output_dim': number_of_aux_label_per_attribute}
-            model = base_models.SimpleNonLinear(model_params)
+            model = base_models.AdversarialSingle(model_params)
         elif method == 'adversarial_moe':
             model_params['model_arch']['adv'] = {'output_dim': number_of_aux_label_per_attribute}
             raise NotImplementedError
