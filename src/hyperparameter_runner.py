@@ -71,7 +71,7 @@ if __name__ == '__main__':
                     optimizer_name=args.optimizer_name,
                     lr=args.lr,
                     fairness_function=args.fairness_function,
-                    use_dropout=args.dropout,  # 0.0 corresponds to no dropout being applied
+                    use_dropout=args.use_dropout,  # 0.0 corresponds to no dropout being applied
                     per_group_label_number_of_examples=args.per_group_label_number_of_examples,
                     standard_scalar=True,
                     iterator_type=args.iterator_type,
