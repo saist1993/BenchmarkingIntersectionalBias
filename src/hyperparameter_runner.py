@@ -75,7 +75,7 @@ if __name__ == '__main__':
                     per_group_label_number_of_examples=args.per_group_label_number_of_examples,
                     standard_scalar=True,
                     iterator_type=args.iterator_type,
-                    regularization_lambda=args.reg
+                    regularization_lambda=reg
                 )
                 runner(runner_arguments)
             except KeyboardInterrupt:
