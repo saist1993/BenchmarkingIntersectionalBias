@@ -308,4 +308,4 @@ def orchestrator(training_loop_parameters: TrainingLoopParameters, parsed_datase
 
         if logger: logger.info("end of epoch block")
 
-        return training_loop_parameters.model
+    return training_loop_parameters.model
