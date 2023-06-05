@@ -8,6 +8,8 @@ from tqdm import tqdm
 import random
 import warnings
 
+from sklearn.decomposition import PCA
+
 
 # an abstract class for linear classifiers
 
@@ -174,7 +176,9 @@ def get_debiasing_projection(classifier_class, cls_params: Dict, num_classifiers
             temp_row_space_projection.append(get_rowspace_projection(W))  # projection to W's rowspace
 
         # need to sum temp rowspace projection here!
-        rowspace_projections.append(np.sum(temp_row_space_projection, 0))
+        # rowspace_projections.append(np.sum(temp_row_space_projection, 0))
+
+        rowspace_projections.append(PCA(n_components=2).fit(np.vstack(temp_w)).components_[0].reshape(1, -1))
 
         if is_autoregressive:
             """
@@ -188,13 +192,6 @@ def get_debiasing_projection(classifier_class, cls_params: Dict, num_classifiers
 
             X_train_cp = (P.dot(X_train.T)).T
             X_dev_cp = (P.dot(X_dev.T)).T
-
-    """
-    calculae final projection matrix P=PnPn-1....P2P1
-    since w_i.dot(w_i-1) = 0, P2P1 = I - P1 - P2 (proof in the paper); this is more stable.
-    by induction, PnPn-1....P2P1 = I - (P1+..+PN). We will use instead Ben-Israel's formula to increase stability and also generalize to the non-orthogonal case (e.g. with dropout),
-    i.e., we explicitly project to intersection of all nullspaces (this is not critical at this point; I-(P1+...+PN) is roughly as accurate as this provided no dropout & regularization)
-    """
 
     P = get_projection_to_intersection_of_nullspaces(rowspace_projections, input_dim)
 
