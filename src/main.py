@@ -36,7 +36,7 @@ def runner(runner_arguments: arguments.RunnerArguments):
         'seed': runner_arguments.seed,
         'standard_scalar': runner_arguments.standard_scalar
     }
-    parsed_dataset = misc_utils.generate_raw_dataset(dataset_name="twitter_hate_speech", **iterator_params)
+    parsed_dataset = misc_utils.generate_raw_dataset(dataset_name=runner_arguments.dataset_name, **iterator_params)
 
     # get model
     model = misc_utils.get_model(

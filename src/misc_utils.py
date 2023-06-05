@@ -6,7 +6,7 @@ from pathlib import Path
 from models import base_models
 from typing import Optional, Dict
 from arguments import ParsedDataset
-from dataset_parser import twitter_hate_speech
+from dataset_parser import twitter_hate_speech, numeracy
 
 
 def get_logger(unique_id_for_run, log_file_name: Optional[str], log_dir, runner_arguments) -> None:
@@ -133,6 +133,10 @@ def generate_raw_dataset(dataset_name: str, **kwargs):
         kwargs['dataset_location'] = Path(
             '../datasets/Multilingual-Hate-Speech-LREC-Huang-2019-data/data/split/English')
         dataset_creator = twitter_hate_speech.DatasetTwitterHateSpeech(dataset_name=dataset_name, **kwargs)
+        return dataset_creator.run()
+    elif "numeracy" in dataset_name.lower():
+        kwargs['dataset_location'] = Path('../datasets/numeracy')
+        dataset_creator = numeracy.SimpleClassificationDataset(dataset_name=dataset_name, **kwargs)
         return dataset_creator.run()
     else:
         raise NotImplementedError

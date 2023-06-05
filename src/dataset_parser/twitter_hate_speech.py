@@ -1,5 +1,3 @@
-import copy
-
 import torch
 import numpy as np
 import pandas as pd
@@ -198,6 +196,12 @@ class DatasetTwitterHateSpeech:
 
         if self.dataset_name == 'twitter_hate_speech_v3':
             train_s, valid_s, test_s = train_s[:, :3], valid_s[:, :3], test_s[:, :3]
+
+        if self.standard_scalar:
+            scaler = StandardScaler().fit(train_X)
+            train_X = scaler.transform(train_X)
+            valid_X = scaler.transform(valid_X)
+            test_X = scaler.transform(test_X)
 
         def flatten(seq):
             seen = {}

@@ -151,6 +151,7 @@ def get_debiasing_projection(classifier_class, cls_params: Dict, num_classifiers
     Ws = []
 
     pbar = tqdm(range(num_classifiers))
+    temp_w = []
     for i in pbar:
         temp_row_space_projection = []
         for i in range(Y_train.shape[1]):
@@ -168,6 +169,7 @@ def get_debiasing_projection(classifier_class, cls_params: Dict, num_classifiers
             if acc < min_accuracy: continue
 
             W = clf.get_weights()
+            temp_w.append(W)
             # for each y, do the same and then add all P_rowspace_wi
             temp_row_space_projection.append(get_rowspace_projection(W))  # projection to W's rowspace
 
