@@ -5,7 +5,7 @@ import arguments
 import shortuuid
 import misc_utils
 from pathlib import Path
-from training_loops import simple_training_loop
+from training_loops import simple_training_loop, inlp_training_loop
 from fairgrad.torch import CrossEntropyLoss as fairgrad_CrossEntropyLoss
 
 LOG_DIR = Path("../logs")
@@ -76,7 +76,12 @@ def runner(runner_arguments: arguments.RunnerArguments):
         method=runner_arguments.method,
         regularization_lambda=runner_arguments.regularization_lambda)
 
-    _ = simple_training_loop.orchestrator(training_loop_parameters=training_loop_params, parsed_dataset=parsed_dataset)
+    if training_loop_params.method == "inlp":
+        _ = inlp_training_loop.orchestrator(training_loop_parameters=training_loop_params,
+                                            parsed_dataset=parsed_dataset)
+    else:
+        _ = simple_training_loop.orchestrator(training_loop_parameters=training_loop_params,
+                                              parsed_dataset=parsed_dataset)
 
 
 if __name__ == "__main__":
