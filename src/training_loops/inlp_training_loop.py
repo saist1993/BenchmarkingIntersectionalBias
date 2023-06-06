@@ -66,7 +66,7 @@ def orchestrator(training_loop_parameters: TrainingLoopParameters, parsed_datase
                                                                      training_loop_parameters.device)
 
     # Step3: Setup a classifier
-    discriminator_reweighting = False
+    discriminator_reweighting = None
     n = 15
     min_acc = 0.0
     is_autoregressive = True
