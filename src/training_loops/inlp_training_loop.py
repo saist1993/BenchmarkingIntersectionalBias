@@ -67,13 +67,13 @@ def orchestrator(training_loop_parameters: TrainingLoopParameters, parsed_datase
 
     # Step3: Setup a classifier
     discriminator_reweighting = False
-    n = 50
+    n = 15
     min_acc = 0.0
     is_autoregressive = True
     dim = train_hidden.shape[1]  # @TODO: This needs to be set `
     clf = LogisticRegression
     clf_params = {'fit_intercept': True, 'class_weight': discriminator_reweighting, 'dual': False, 'C': 0.1,
-                  "max_iter": 100}
+                  "max_iter": 500}
 
     # Step4: Run INLP
     P_n = get_debiasing_projection(clf, clf_params, n, dim, is_autoregressive, min_acc,
@@ -96,7 +96,7 @@ def orchestrator(training_loop_parameters: TrainingLoopParameters, parsed_datase
                                         multi_class='multinomial',
                                         fit_intercept=True,
                                         verbose=0,
-                                        max_iter=10,
+                                        max_iter=200,
                                         n_jobs=24,
                                         random_state=1)
         classifier.fit(debiased_x_train, train_labels)

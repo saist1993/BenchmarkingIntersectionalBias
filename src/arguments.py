@@ -10,12 +10,12 @@ class RunnerArguments():
     @TODO: clean this arguments files a bit!
     """
     seed: int = 50
-    dataset_name: str = "numeracy"
+    dataset_name: str = "celeb_multigroup_v4"
     batch_size: int = 1024
     model: str = "simple_non_linear"
     epochs: int = 20
     save_model_as: Optional[str] = None
-    method: str = 'inlp'
+    method: str = 'unconstrained'
     optimizer_name: str = 'adam'
     lr: float = 0.001
     use_wandb: bool = False  # For legacy purpose. Not in the current codebase
@@ -30,7 +30,7 @@ class RunnerArguments():
     max_number_of_generated_examples: float = 1.0
     use_dropout: float = 0.2  # 0.0 corresponds to no dropout being applied
     use_batch_norm: float = 0.0  # 0.0 corresponds to no batch norm being applied
-    per_group_label_number_of_examples: int = -1
+    per_group_label_number_of_examples: int = 10000
     positive_gen_model: str = "gen_model_positive_numeracy_10_simple.pt"
     negative_gen_model: str = "gen_model_negative_numeracy_10_simple.pt"
     log_dir: str = '../logs'

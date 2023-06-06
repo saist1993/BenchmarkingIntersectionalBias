@@ -178,7 +178,7 @@ def get_debiasing_projection(classifier_class, cls_params: Dict, num_classifiers
         # need to sum temp rowspace projection here!
         # rowspace_projections.append(np.sum(temp_row_space_projection, 0))
 
-        rowspace_projections.append(PCA(n_components=2).fit(np.vstack(temp_w)).components_[0].reshape(1, -1))
+        rowspace_projections.append(PCA().fit(np.vstack(temp_w)).components_[0].reshape(1, -1))
 
         if is_autoregressive:
             """
