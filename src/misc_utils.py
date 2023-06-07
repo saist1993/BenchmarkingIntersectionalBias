@@ -1,3 +1,4 @@
+import copy
 import torch
 import random
 import logging
@@ -5,6 +6,7 @@ import numpy as np
 from pathlib import Path
 from models import base_models
 from typing import Optional, Dict
+from itertools import combinations
 from arguments import ParsedDataset
 from dataset_parser import twitter_hate_speech, numeracy, simple_classification_dataset
 
@@ -122,6 +124,18 @@ def generate_mask(all_s, mask_pattern):
     for i in keep_indices:
         mask = np.logical_and(mask, i)
     return mask
+
+
+def generate_abstract_node(s, k=1):
+    all_s_combinations = []
+
+    for i in combinations(range(len(s)), k):
+        _temp = list(copy.deepcopy(s))
+        for j in i:
+            _temp[j] = 'x'
+        all_s_combinations.append(tuple(_temp))
+
+    return all_s_combinations
 
 
 def generate_raw_dataset(dataset_name: str, **kwargs):

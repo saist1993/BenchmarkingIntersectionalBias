@@ -5,6 +5,7 @@ import arguments
 import shortuuid
 import misc_utils
 from pathlib import Path
+from dataset_generation import generate_data
 from training_loops import simple_training_loop, inlp_training_loop
 from fairgrad.torch import CrossEntropyLoss as fairgrad_CrossEntropyLoss
 
@@ -39,7 +40,13 @@ def runner(runner_arguments: arguments.RunnerArguments):
     parsed_dataset = misc_utils.generate_raw_dataset(dataset_name=runner_arguments.dataset_name, **iterator_params)
 
     # This is where the generated data should come
-    parsed_dataset_gen = None
+    gen_data = generate_data.GenerateData(parsed_dataset=parsed_dataset,
+                                          positive_gen_model=Path(
+                                              '../saved_gen_models/gen_model_positive_twitter_hate_speech_50_simple.pt'),
+                                          negative_gen_model=Path(
+                                              '../saved_gen_models/gen_model_negative_twitter_hate_speech_50_simple.pt'),
+                                          size_of_each_group=1000)
+    parsed_dataset_gen = gen_data.run()
 
     # get model
     model = misc_utils.get_model(
