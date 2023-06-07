@@ -38,6 +38,9 @@ def runner(runner_arguments: arguments.RunnerArguments):
     }
     parsed_dataset = misc_utils.generate_raw_dataset(dataset_name=runner_arguments.dataset_name, **iterator_params)
 
+    # This is where the generated data should come
+    parsed_dataset_gen = None
+
     # get model
     model = misc_utils.get_model(
         method=runner_arguments.method,
