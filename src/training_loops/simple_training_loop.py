@@ -3,6 +3,7 @@ import logging
 import numpy as np
 from tqdm.auto import tqdm
 from metrics import epoch_metric
+from custom_fairness_loss import FairnessLoss
 from fairgrad.torch import CrossEntropyLoss as fairgrad_CrossEntropyLoss
 from arguments import TrainingLoopParameters, ParsedDataset, SimpleTrainParameters, EpochMetric
 from .training_utils import get_iterators, collect_output, get_fairness_related_meta_dict, mixup_sub_routine
@@ -245,6 +246,8 @@ def orchestrator(training_loop_parameters: TrainingLoopParameters, parsed_datase
                                                                     epsilon=0.0)
 
         training_loop_parameters.criterion = fairgrad_CrossEntropyLoss(reduction='none', **fairness_related_meta_data)
+        # fairness_related_meta_data['base_loss_class'] = torch.nn.CrossEntropyLoss
+        # training_loop_parameters.criterion = FairnessLoss(**fairness_related_meta_data)
 
     for ep in range(training_loop_parameters.n_epochs):
         if logger: logger.info("start of epoch block")
