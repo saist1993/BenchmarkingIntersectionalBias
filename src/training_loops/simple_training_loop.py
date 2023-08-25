@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from tqdm.auto import tqdm
 from metrics import epoch_metric
-from custom_fairness_loss import FairnessLoss
+# from custom_fairness_loss import FairnessLoss
 from fairgrad.torch import CrossEntropyLoss as fairgrad_CrossEntropyLoss
 from arguments import TrainingLoopParameters, ParsedDataset, SimpleTrainParameters, EpochMetric
 from .training_utils import get_iterators, collect_output, get_fairness_related_meta_dict, mixup_sub_routine
