@@ -15,7 +15,7 @@ class RunnerArguments():
     model: str = "simple_non_linear"
     epochs: int = 20
     save_model_as: Optional[str] = None
-    method: str = "mixup_regularizer"
+    method: str = "unconstrained_augmented"
     optimizer_name: str = 'adam'
     lr: float = 0.001
     use_wandb: bool = False  # For legacy purpose. Not in the current codebase
