@@ -44,16 +44,16 @@ def runner(runner_arguments: arguments.RunnerArguments):
         if runner_arguments.fairness_function == "equal_odds":
             gen_data = generate_data.GenerateData(parsed_dataset=parsed_dataset,
                                                   positive_gen_model=Path(
-                                                      '../saved_gen_models/gen_model_positive_twitter_hate_speech_50_intermediate.pt'),
+                                                      f'../saved_gen_models/gen_model_positive_{runner_arguments.dataset_name}_{runner_arguments.seed}_intermediate.pt'),
                                                   negative_gen_model=Path(
-                                                      '../saved_gen_models/gen_model_negative_twitter_hate_speech_50_simple.pt'),
+                                                      f'../saved_gen_models/gen_model_negative_{runner_arguments.dataset_name}_{runner_arguments.seed}_simple.pt'),
                                                   size_of_each_group=runner_arguments.per_group_label_number_of_examples)
         elif runner_arguments.fairness_function == "equal_opportunity":
             gen_data = generate_data.GenerateData(parsed_dataset=parsed_dataset,
                                                   positive_gen_model=Path(
-                                                      '../saved_gen_models/gen_model_positive_twitter_hate_speech_50_simple.pt'),
+                                                      f'../saved_gen_models/gen_model_positive_{runner_arguments.dataset_name}_{runner_arguments.seed}_simple.pt'),
                                                   negative_gen_model=Path(
-                                                      '../saved_gen_models/gen_model_negative_twitter_hate_speech_50_intermediate.pt'),
+                                                      f'../saved_gen_models/gen_model_negative_{runner_arguments.dataset_name}_{runner_arguments.seed}_intermediate.pt'),
                                                   size_of_each_group=runner_arguments.per_group_label_number_of_examples)
         parsed_dataset = gen_data.run()
 

@@ -30,7 +30,7 @@ class RunnerArguments():
     max_number_of_generated_examples: float = 1.0
     use_dropout: float = 0.2  # 0.0 corresponds to no dropout being applied
     use_batch_norm: float = 0.0  # 0.0 corresponds to no batch norm being applied
-    per_group_label_number_of_examples: int = -1
+    per_group_label_number_of_examples: int = 500
     positive_gen_model: str = "dummy"
     negative_gen_model: str = "dummy"
     log_dir: str = '../logs'
