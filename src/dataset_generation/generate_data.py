@@ -58,6 +58,55 @@ class GenerateData:
         return generated_train_X, self.parsed_dataset.train_y[index_of_selected_examples_label], \
             self.parsed_dataset.train_s[index_of_selected_examples_group]
 
+    def gen_data_via_noise(self, group, size, label="positive"):
+        # find all the first level abstract groups
+
+        if label == "positive":
+            mask = training_utils.generate_mask(self.parsed_dataset.train_s, group)
+            final_mask = np.logical_and(mask, self.parsed_dataset.train_y == 1)
+        elif label == "negative":
+            mask = training_utils.generate_mask(self.parsed_dataset.train_s, group)
+            final_mask = np.logical_and(mask, self.parsed_dataset.train_y == 0)
+
+        abstract_groups = generate_abstract_node(s=group, k=1)
+        input_to_gen_model = []
+        for abstract_group in abstract_groups:
+            mask = training_utils.generate_mask(self.parsed_dataset.train_s, abstract_group)
+            if label == "positive":
+                final_mask = np.logical_and(mask, self.parsed_dataset.train_y == 1)
+            elif label == "negative":
+                final_mask = np.logical_and(mask, self.parsed_dataset.train_y == 0)
+            else:
+                raise NotImplementedError
+
+            abstract_group_examples_mask = np.random.choice(np.where(final_mask == True)[0], size=size,
+                                                            replace=True)
+            abstract_group_examples = {
+                'input': torch.FloatTensor(self.parsed_dataset.train_X[abstract_group_examples_mask]),
+            }
+            input_to_gen_model.append(abstract_group_examples)
+        if label == "positive":
+            generated_train_X = self.positive_gen_model(input_to_gen_model)['prediction'].detach().numpy()
+            index_of_selected_examples_label = np.random.choice(np.where(self.parsed_dataset.train_y == 1)[0],
+                                                                size=size,
+                                                                replace=True)
+        elif label == "negative":
+            generated_train_X = self.negative_gen_model(input_to_gen_model)['prediction'].detach().numpy()
+            index_of_selected_examples_label = np.random.choice(np.where(self.parsed_dataset.train_y == 0)[0],
+                                                                size=size,
+                                                                replace=True)
+        else:
+            raise NotImplementedError
+
+        mask = training_utils.generate_mask(self.parsed_dataset.train_s, group)
+
+        index_of_selected_examples_group = np.random.choice(np.where(mask == True)[0],
+                                                            size=size,
+                                                            replace=True)
+
+        return generated_train_X, self.parsed_dataset.train_y[index_of_selected_examples_label], \
+            self.parsed_dataset.train_s[index_of_selected_examples_group]
+
     def run(self):
         if self.size_of_each_group == None:
             self.size_of_each_group = {}
@@ -78,6 +127,17 @@ class GenerateData:
                     1: group_size,
                     0: group_size
                 }
+
+        self.size_of_each_group = {}
+        for group in self.parsed_dataset.all_groups:
+            mask = training_utils.generate_mask(self.parsed_dataset.train_s, group)
+            positive_mask = np.logical_and(mask, self.parsed_dataset.train_y == 1)
+            negative_mask = np.logical_and(mask, self.parsed_dataset.train_y == 0)
+            self.size_of_each_group[tuple(group)] = {
+                1: np.sum(positive_mask),
+                0: np.sum(negative_mask)
+            }
+
         all_X, all_s, all_y = [], [], []
 
         for group, group_size in self.size_of_each_group.items():
