@@ -31,8 +31,8 @@ class RunnerArguments():
     use_dropout: float = 0.2  # 0.0 corresponds to no dropout being applied
     use_batch_norm: float = 0.0  # 0.0 corresponds to no batch norm being applied
     per_group_label_number_of_examples: int = -1
-    positive_gen_model: str = "gen_model_positive_numeracy_10_simple.pt"
-    negative_gen_model: str = "gen_model_negative_numeracy_10_simple.pt"
+    positive_gen_model: str = "dummy"
+    negative_gen_model: str = "dummy"
     log_dir: str = '../logs'
     standard_scalar: bool = True
     iterator_type: str = "group_iterator"
