@@ -10,7 +10,7 @@ class RunnerArguments():
     @TODO: clean this arguments files a bit!
     """
     seed: int = 50
-    dataset_name: str = "twitter_hate_speech"
+    dataset_name: str = "numeracy"
     batch_size: int = 1024
     model: str = "simple_non_linear"
     epochs: int = 20
