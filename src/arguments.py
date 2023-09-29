@@ -24,7 +24,7 @@ class RunnerArguments():
     attribute_id: Optional[int] = None
     fairness_lambda: float = 0.0
     log_file_name: Optional[str] = None
-    fairness_function: str = 'equal_odds'
+    fairness_function: str = 'equal_opportunity'
     titled_t: float = 5.0
     mixup_rg: float = 0.5
     max_number_of_generated_examples: float = 1.0
