@@ -108,56 +108,64 @@ class GenerateData:
             self.parsed_dataset.train_s[index_of_selected_examples_group]
 
     def run(self):
-        if self.size_of_each_group == None:
-            self.size_of_each_group = {}
-            for group in self.parsed_dataset.all_groups:
-                mask = training_utils.generate_mask(self.parsed_dataset.train_s, group)
-                positive_mask = np.logical_and(mask, self.parsed_dataset.train_y == 1)
-                negative_mask = np.logical_and(mask, self.parsed_dataset.train_y == 0)
-                self.size_of_each_group[tuple(group)] = {
-                    1: np.sum(positive_mask),
-                    0: np.sum(negative_mask)
-                }
+        # if self.size_of_each_group == None:
+        #     self.size_of_each_group = {}
+        #     for group in self.parsed_dataset.all_groups:
+        #         mask = training_utils.generate_mask(self.parsed_dataset.train_s, group)
+        #         positive_mask = np.logical_and(mask, self.parsed_dataset.train_y == 1)
+        #         negative_mask = np.logical_and(mask, self.parsed_dataset.train_y == 0)
+        #         self.size_of_each_group[tuple(group)] = {
+        #             1: np.sum(positive_mask),
+        #             0: np.sum(negative_mask)
+        #         }
+        #
+        # if type(self.size_of_each_group) == int:
+        #     group_size = copy.deepcopy(self.size_of_each_group)
+        #     self.size_of_each_group = {}
+        #     for group in self.parsed_dataset.all_groups:
+        #         self.size_of_each_group[tuple(group)] = {
+        #             1: group_size,
+        #             0: group_size
+        #         }
 
-        if type(self.size_of_each_group) == int:
-            group_size = copy.deepcopy(self.size_of_each_group)
-            self.size_of_each_group = {}
-            for group in self.parsed_dataset.all_groups:
-                self.size_of_each_group[tuple(group)] = {
-                    1: group_size,
-                    0: group_size
-                }
-
+        group_size = copy.deepcopy(self.size_of_each_group)
         self.size_of_each_group = {}
         for group in self.parsed_dataset.all_groups:
             mask = training_utils.generate_mask(self.parsed_dataset.train_s, group)
             positive_mask = np.logical_and(mask, self.parsed_dataset.train_y == 1)
             negative_mask = np.logical_and(mask, self.parsed_dataset.train_y == 0)
             self.size_of_each_group[tuple(group)] = {
-                1: np.sum(positive_mask),
-                0: np.sum(negative_mask)
+                1: max(0, group_size - np.sum(positive_mask)),
+                0: max(0, group_size - np.sum(negative_mask))
             }
+
+            # self.size_of_each_group[tuple(group)] = {
+            #     1: group_size,
+            #     0: group_size
+            # }
 
         all_X, all_s, all_y = [], [], []
 
         for group, group_size in self.size_of_each_group.items():
             positive_size = group_size[1]
             negative_size = group_size[0]
-            x, y, s = self.gen_data(group=group, size=positive_size, label="positive")
-            all_X.append(x)
-            all_y.append(y)
-            all_s.append(s)
-            x, y, s = self.gen_data(group=group, size=negative_size, label="negative")
-            all_X.append(x)
-            all_y.append(y)
-            all_s.append(s)
+            if positive_size > 0:
+                x, y, s = self.gen_data(group=group, size=positive_size, label="positive")
+                all_X.append(x)
+                all_y.append(y)
+                all_s.append(s)
+            if negative_size > 0:
+                x, y, s = self.gen_data(group=group, size=negative_size, label="negative")
+                all_X.append(x)
+                all_y.append(y)
+                all_s.append(s)
 
         all_X = np.vstack(all_X)
         all_s = np.vstack(all_s)
         all_y = np.hstack(all_y)
 
-        self.parsed_dataset.train_X = all_X
-        self.parsed_dataset.train_s = all_s
-        self.parsed_dataset.train_y = all_y
+        self.parsed_dataset.train_X = np.vstack([self.parsed_dataset.train_X, all_X])
+        self.parsed_dataset.train_s = np.vstack([self.parsed_dataset.train_s, all_s])
+        self.parsed_dataset.train_y = np.hstack([self.parsed_dataset.train_y, all_y])
 
         return self.parsed_dataset
