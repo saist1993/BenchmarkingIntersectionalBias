@@ -134,15 +134,15 @@ class GenerateData:
             mask = training_utils.generate_mask(self.parsed_dataset.train_s, group)
             positive_mask = np.logical_and(mask, self.parsed_dataset.train_y == 1)
             negative_mask = np.logical_and(mask, self.parsed_dataset.train_y == 0)
-            self.size_of_each_group[tuple(group)] = {
-                1: max(0, group_size - np.sum(positive_mask)),
-                0: max(0, group_size - np.sum(negative_mask))
-            }
-
             # self.size_of_each_group[tuple(group)] = {
-            #     1: group_size,
-            #     0: group_size
+            #     1: max(0, group_size - np.sum(positive_mask)),
+            #     0: max(0, group_size - np.sum(negative_mask))
             # }
+
+            self.size_of_each_group[tuple(group)] = {
+                1: group_size,
+                0: group_size
+            }
 
         all_X, all_s, all_y = [], [], []
 
