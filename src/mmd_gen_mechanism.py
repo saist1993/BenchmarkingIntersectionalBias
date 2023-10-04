@@ -185,9 +185,12 @@ class AuxilaryFunction:
         #         [other_meta_data['s_flatten_lookup'][tuple(i)] for i in other_meta_data['raw_data']['valid_s']]),
         #     number_of_positive_examples=int(batch_size / 2), number_of_negative_examples=int(batch_size / 2))
 
-        all_label = np.hstack([other_meta_data.valid_y, other_meta_data.train_y])
-        all_aux = np.vstack([other_meta_data.valid_s, other_meta_data.train_s])
-        all_input = np.vstack([other_meta_data.valid_X, other_meta_data.train_X])
+        # all_label = np.hstack([other_meta_data.valid_y, other_meta_data.train_y])
+        # all_aux = np.vstack([other_meta_data.valid_s, other_meta_data.train_s])
+        # all_input = np.vstack([other_meta_data.valid_X, other_meta_data.train_X])
+        all_label = other_meta_data.train_y
+        all_aux = other_meta_data.train_s
+        all_input = other_meta_data.train_X
         #
 
         # if from_real:
@@ -314,7 +317,7 @@ if __name__ == '__main__':
     # iterators, other_meta_data = generate_data_iterators(dataset_name=dataset_name, **iterator_params)
     # scaler = iterators[0]['scaler']
     scaler = StandardScaler().fit(parsed_dataset.train_X)
-    if True:  # dataset_name == "twitter_hate_speech"
+    if False:  # dataset_name == "twitter_hate_speech"
         parsed_dataset.train_X = scaler.transform(parsed_dataset.train_X)
         parsed_dataset.valid_X = scaler.transform(parsed_dataset.valid_X)
 
