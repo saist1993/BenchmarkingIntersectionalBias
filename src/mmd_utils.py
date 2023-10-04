@@ -98,6 +98,8 @@ class SimpleModelGenerator(nn.Module):
             self.lambda_params = torch.nn.Parameter(torch.FloatTensor([0.33, 0.33, 0.33]))
         elif number_of_params == 4:
             self.lambda_params = torch.nn.Parameter(torch.FloatTensor([0.25, 0.25, 0.25, 0.25]))
+        elif number_of_params == 2:
+            self.lambda_params = torch.nn.Parameter(torch.FloatTensor([0.5, 0.5]))
 
         # self.more_lambda_params = nn.ParameterList([torch.nn.Parameter(torch.FloatTensor(torch.ones(input_dim))) for i in
         #                            range(len(self.lambda_params))])
@@ -322,12 +324,12 @@ def _mmd2_and_variance(K_XX, K_XY, K_YY, const_diagonal=False, biased=False):
 
     var_est = (
             2.0 / (m ** 2 * (m - 1.0) ** 2) * (
-                2 * Kt_XX_sums.dot(Kt_XX_sums) - Kt_XX_2_sum + 2 * Kt_YY_sums.dot(Kt_YY_sums) - Kt_YY_2_sum)
+            2 * Kt_XX_sums.dot(Kt_XX_sums) - Kt_XX_2_sum + 2 * Kt_YY_sums.dot(Kt_YY_sums) - Kt_YY_2_sum)
             - (4.0 * m - 6.0) / (m ** 3 * (m - 1.0) ** 3) * (Kt_XX_sum ** 2 + Kt_YY_sum ** 2)
             + 4.0 * (m - 2.0) / (m ** 3 * (m - 1.0) ** 2) * (
-                        K_XY_sums_1.dot(K_XY_sums_1) + K_XY_sums_0.dot(K_XY_sums_0))
+                    K_XY_sums_1.dot(K_XY_sums_1) + K_XY_sums_0.dot(K_XY_sums_0))
             - 4.0 * (m - 3.0) / (m ** 3 * (m - 1.0) ** 2) * (K_XY_2_sum) - (8 * m - 12) / (
-                        m ** 5 * (m - 1)) * K_XY_sum ** 2
+                    m ** 5 * (m - 1)) * K_XY_sum ** 2
             + 8.0 / (m ** 3 * (m - 1.0)) * (
                     1.0 / m * (Kt_XX_sum + Kt_YY_sum) * K_XY_sum
                     - Kt_XX_sums.dot(K_XY_sums_1)

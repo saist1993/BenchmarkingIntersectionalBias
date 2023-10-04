@@ -10,12 +10,12 @@ class RunnerArguments():
     @TODO: clean this arguments files a bit!
     """
     seed: int = 50
-    dataset_name: str = "twitter_hate_speech"
+    dataset_name: str = "numeracy_v1"
     batch_size: int = 1024
     model: str = "simple_non_linear"
     epochs: int = 20
     save_model_as: Optional[str] = None
-    method: str = "unconstrained_augmented"
+    method: str = "unconstrained"
     optimizer_name: str = 'adam'
     lr: float = 0.001
     use_wandb: bool = False  # For legacy purpose. Not in the current codebase
