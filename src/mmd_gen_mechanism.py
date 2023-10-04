@@ -314,7 +314,7 @@ if __name__ == '__main__':
     # iterators, other_meta_data = generate_data_iterators(dataset_name=dataset_name, **iterator_params)
     # scaler = iterators[0]['scaler']
     scaler = StandardScaler().fit(parsed_dataset.train_X)
-    if dataset_name == "twitter_hate_speech":
+    if True:  # dataset_name == "twitter_hate_speech"
         parsed_dataset.train_X = scaler.transform(parsed_dataset.train_X)
         parsed_dataset.valid_X = scaler.transform(parsed_dataset.valid_X)
 
