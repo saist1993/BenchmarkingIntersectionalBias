@@ -53,7 +53,7 @@ def runner(runner_arguments: arguments.RunnerArguments):
                                                   positive_gen_model=Path(
                                                       f'../saved_gen_models/gen_model_positive_{runner_arguments.dataset_name}_{runner_arguments.seed}_simple.pt'),
                                                   negative_gen_model=Path(
-                                                      f'../saved_gen_models/gen_model_negative_{runner_arguments.dataset_name}_{runner_arguments.seed}_simple.pt'),
+                                                      f'../saved_gen_models/gen_model_negative_{runner_arguments.dataset_name}_{runner_arguments.seed}_intermediate.pt'),
                                                   size_of_each_group=runner_arguments.per_group_label_number_of_examples)
         parsed_dataset = gen_data.run()
 
