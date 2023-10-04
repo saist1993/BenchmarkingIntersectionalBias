@@ -268,7 +268,7 @@ if __name__ == '__main__':
     parser.add_argument('--positive_model', '-positive_model',
                         help="simple/intermediate/complex",
                         type=str,
-                        default='intermediate')
+                        default='simple')
 
     parser.add_argument('--negative_model', '-negative_model',
                         help="simple/intermediate/complex",
