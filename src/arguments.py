@@ -34,7 +34,7 @@ class RunnerArguments():
     positive_gen_model: str = "dummy"
     negative_gen_model: str = "dummy"
     log_dir: str = '../logs'
-    standard_scalar: bool = False
+    standard_scalar: bool = True
     iterator_type: str = "group_iterator"
     regularization_lambda: float = 0.0
 
