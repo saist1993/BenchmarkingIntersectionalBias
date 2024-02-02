@@ -47,7 +47,13 @@ class SimpleNonLinear(nn.Module):
             self.batchnorm3 = nn.InstanceNorm1d(32)
 
     def forward(self, params):
-        x = params['input']
+
+        if type(params) == torch.Tensor:
+            x = params
+            output_flag = "post_processing_df"
+        else:
+            x = params['input']
+            output_flag = "default"
         x = self.layer_1(x)
         if self.use_batch_norm:
             x = self.batchnorm1(x)
@@ -68,19 +74,25 @@ class SimpleNonLinear(nn.Module):
 
         z = self.layer_out(z)
 
-        output = {
-            'prediction': z,
-            'adv_output': None,
-            'hidden': x,  # just for compatabilit
-            'classifier_hiddens': None,
-            'adv_hiddens': None
-        }
+        if output_flag == "default":
+            output = {
+                'prediction': z,
+                'adv_output': None,
+                'hidden': x,  # just for compatabilit
+                'classifier_hiddens': None,
+                'adv_hiddens': None
+            }
+        elif output_flag == "post_processing_df":
+            return z
+        else:
+            raise NotImplementedError
 
         return output
 
     @property
     def layers(self):
-        return torch.nn.ModuleList([self.layer_1, self.layer_2, self.layer_3, self.layer_out])
+        return torch.nn.ModuleList(
+            [self.layer_1, self.layer_2, self.layer_3, self.layer_out])
 
 
 class AdversarialSingle(nn.Module):
@@ -90,7 +102,8 @@ class AdversarialSingle(nn.Module):
         input_dim = params['model_arch']['encoder']['input_dim']
         output_dim = params['model_arch']['encoder']['output_dim']
         # Generalizing this to n-adversarial
-        adv_dims = params['model_arch']['adv']['output_dim']  # List with n adversarial output!
+        adv_dims = params['model_arch']['adv'][
+            'output_dim']  # List with n adversarial output!
 
         dropout = params['use_dropout']
 
@@ -136,7 +149,8 @@ class AdversarialSingle(nn.Module):
     def forward(self, params):
         x = params['input']
         encoder_output = self.encoder(x)
-        adv_output = [adv(GradReverse.apply(encoder_output)) for adv in self.adversarials]
+        adv_output = [adv(GradReverse.apply(encoder_output)) for adv in
+                      self.adversarials]
         task_classifier_output = self.task_classifier(encoder_output)
 
         output = {
@@ -151,4 +165,5 @@ class AdversarialSingle(nn.Module):
 
     @property
     def layers(self):
-        return torch.nn.ModuleList([self.encoder, self.adversarials, self.task_classifier])
+        return torch.nn.ModuleList(
+            [self.encoder, self.adversarials, self.task_classifier])

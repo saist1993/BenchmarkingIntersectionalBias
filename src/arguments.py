@@ -10,12 +10,12 @@ class RunnerArguments():
     @TODO: clean this arguments files a bit!
     """
     seed: int = 50
-    dataset_name: str = "numeracy_v1"
+    dataset_name: str = "numeracy"
     batch_size: int = 1024
     model: str = "simple_non_linear"
     epochs: int = 20
     save_model_as: Optional[str] = None
-    method: str = "unconstrained"
+    method: str = "post_processing_df"
     optimizer_name: str = 'adam'
     lr: float = 0.001
     use_wandb: bool = False  # For legacy purpose. Not in the current codebase
@@ -24,7 +24,7 @@ class RunnerArguments():
     attribute_id: Optional[int] = None
     fairness_lambda: float = 0.0
     log_file_name: Optional[str] = None
-    fairness_function: str = 'equal_opportunity'
+    fairness_function: str = 'equal_odds'
     titled_t: float = 5.0
     mixup_rg: float = 0.5
     max_number_of_generated_examples: float = 1.0

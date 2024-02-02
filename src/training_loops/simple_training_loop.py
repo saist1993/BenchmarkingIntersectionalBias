@@ -5,8 +5,10 @@ from tqdm.auto import tqdm
 from metrics import epoch_metric
 # from custom_fairness_loss import FairnessLoss
 from fairgrad.torch import CrossEntropyLoss as fairgrad_CrossEntropyLoss
-from arguments import TrainingLoopParameters, ParsedDataset, SimpleTrainParameters, EpochMetric
-from .training_utils import get_iterators, collect_output, get_fairness_related_meta_dict, mixup_sub_routine
+from arguments import TrainingLoopParameters, ParsedDataset, SimpleTrainParameters, \
+    EpochMetric
+from .training_utils import get_iterators, collect_output, \
+    get_fairness_related_meta_dict, mixup_sub_routine
 
 
 def train_simple(train_parameters: SimpleTrainParameters):
@@ -24,7 +26,8 @@ def train_simple(train_parameters: SimpleTrainParameters):
 
         optimizer.zero_grad()
         output = model(items)
-        loss = criterion(output['prediction'], items['labels'], items['aux_flattened'], mode='train')
+        loss = criterion(output['prediction'], items['labels'], items['aux_flattened'],
+                         mode='train')
         loss = torch.mean(loss)
         loss.backward()
         optimizer.step()
@@ -33,7 +36,8 @@ def train_simple(train_parameters: SimpleTrainParameters):
         track_input.append(items)
 
     model.eval()
-    predictions, labels, s, loss = collect_output(all_batch_outputs=track_output, all_batch_inputs=track_input)
+    predictions, labels, s, loss = collect_output(all_batch_outputs=track_output,
+                                                  all_batch_inputs=track_input)
     em = EpochMetric(
         predictions=predictions,
         labels=labels,
@@ -62,7 +66,8 @@ def train_group(train_parameters: SimpleTrainParameters):
 
         optimizer.zero_grad()
         output = model(items)
-        loss = criterion(output['prediction'], items['labels'], items['aux_flattened'], mode='train')
+        loss = criterion(output['prediction'], items['labels'], items['aux_flattened'],
+                         mode='train')
         loss = torch.mean(loss)
         loss.backward()
         optimizer.step()
@@ -71,7 +76,8 @@ def train_group(train_parameters: SimpleTrainParameters):
         track_input.append(items)
 
     model.eval()
-    predictions, labels, s, loss = collect_output(all_batch_outputs=track_output, all_batch_inputs=track_input)
+    predictions, labels, s, loss = collect_output(all_batch_outputs=track_output,
+                                                  all_batch_inputs=track_input)
     em = EpochMetric(
         predictions=predictions,
         labels=labels,
@@ -95,7 +101,8 @@ def train_mixup_regularizer(train_parameters: SimpleTrainParameters):
 
     for _ in tqdm(range(train_parameters.number_of_iterations)):
         index = np.random.choice(len(train_parameters.all_unique_groups), 2, False)
-        group1, group2 = train_parameters.all_unique_groups[index[0]], train_parameters.all_unique_groups[index[1]]
+        group1, group2 = train_parameters.all_unique_groups[index[0]], \
+        train_parameters.all_unique_groups[index[1]]
         items_group_1 = train_parameters.iterator(group1)
         items_group_2 = train_parameters.iterator(group2)
 
@@ -108,13 +115,16 @@ def train_mixup_regularizer(train_parameters: SimpleTrainParameters):
         optimizer.zero_grad()
         output_group_1 = model(items_group_1)
         output_group_2 = model(items_group_2)
-        loss_group_1 = criterion(output_group_1['prediction'], items_group_1['labels'], items_group_1['aux_flattened'],
+        loss_group_1 = criterion(output_group_1['prediction'], items_group_1['labels'],
+                                 items_group_1['aux_flattened'],
                                  mode='train')
-        loss_group_2 = criterion(output_group_2['prediction'], items_group_2['labels'], items_group_2['aux_flattened'],
+        loss_group_2 = criterion(output_group_2['prediction'], items_group_2['labels'],
+                                 items_group_2['aux_flattened'],
                                  mode='train')
 
-        reg_loss = train_parameters.regularization_lambda * mixup_sub_routine(train_parameters, items_group_1,
-                                                                              items_group_2, model)
+        reg_loss = train_parameters.regularization_lambda * mixup_sub_routine(
+            train_parameters, items_group_1,
+            items_group_2, model)
         loss = torch.mean(loss_group_1) + torch.mean(loss_group_2) + reg_loss
 
         loss.backward()
@@ -125,7 +135,8 @@ def train_mixup_regularizer(train_parameters: SimpleTrainParameters):
         track_input.append(items_group_1)
 
     model.eval()
-    predictions, labels, s, loss = collect_output(all_batch_outputs=track_output, all_batch_inputs=track_input)
+    predictions, labels, s, loss = \
+        collect_output(all_batch_outputs=track_output, all_batch_inputs=track_input)
     em = EpochMetric(
         predictions=predictions,
         labels=labels,
@@ -153,7 +164,8 @@ def train_adversarial_single(train_parameters: SimpleTrainParameters):
 
         optimizer.zero_grad()
         output = model(items)
-        loss = criterion(output['prediction'], items['labels'], items['aux_flattened'], mode='train')
+        loss = criterion(output['prediction'], items['labels'], items['aux_flattened'],
+                         mode='train')
         adv_loss = train_parameters.regularization_lambda * torch.mean(
             criterion(output['adv_outputs'][0], items['aux_flattened']))
         loss = torch.mean(loss) + adv_loss
@@ -164,7 +176,8 @@ def train_adversarial_single(train_parameters: SimpleTrainParameters):
         track_input.append(items)
 
     model.eval()
-    predictions, labels, s, loss = collect_output(all_batch_outputs=track_output, all_batch_inputs=track_input)
+    predictions, labels, s, loss = collect_output(all_batch_outputs=track_output,
+                                                  all_batch_inputs=track_input)
     em = EpochMetric(
         predictions=predictions,
         labels=labels,
@@ -192,13 +205,15 @@ def test(train_parameters: SimpleTrainParameters):
 
         optimizer.zero_grad()
         output = model(items)
-        loss = criterion(output['prediction'], items['labels'], items['aux_flattened'], mode='train')
+        loss = criterion(output['prediction'], items['labels'], items['aux_flattened'],
+                         mode='train')
         loss = torch.mean(loss)
         output['loss_batch'] = loss.item()
         track_output.append(output)
         track_input.append(items)
 
-    predictions, labels, s, loss = collect_output(all_batch_outputs=track_output, all_batch_inputs=track_input)
+    predictions, labels, s, loss = collect_output(all_batch_outputs=track_output,
+                                                  all_batch_inputs=track_input)
     em = EpochMetric(
         predictions=predictions,
         labels=labels,
@@ -211,7 +226,8 @@ def test(train_parameters: SimpleTrainParameters):
     return emo
 
 
-def orchestrator(training_loop_parameters: TrainingLoopParameters, parsed_dataset: ParsedDataset):
+def orchestrator(training_loop_parameters: TrainingLoopParameters,
+                 parsed_dataset: ParsedDataset):
     """
     :param training_loop_parameters: contains all information needed to train the model and the information related to settings
     :param parsed_dataset: contains all information related to dataset.
@@ -234,9 +250,10 @@ def orchestrator(training_loop_parameters: TrainingLoopParameters, parsed_datase
     else:
         shuffle = True
 
-    original_train_iterator, train_iterator, valid_iterator, test_iterator = get_iterators(training_loop_parameters,
-                                                                                           parsed_dataset,
-                                                                                           shuffle=shuffle)
+    original_train_iterator, train_iterator, valid_iterator, test_iterator = get_iterators(
+        training_loop_parameters,
+        parsed_dataset,
+        shuffle=shuffle)
 
     if training_loop_parameters.method == "fairgrad":
         assert training_loop_parameters.iterator_type == "simple_iterator"
@@ -245,7 +262,8 @@ def orchestrator(training_loop_parameters: TrainingLoopParameters, parsed_datase
                                                                     fairness_rate=0.01,
                                                                     epsilon=0.0)
 
-        training_loop_parameters.criterion = fairgrad_CrossEntropyLoss(reduction='none', **fairness_related_meta_data)
+        training_loop_parameters.criterion = fairgrad_CrossEntropyLoss(reduction='none',
+                                                                       **fairness_related_meta_data)
         # fairness_related_meta_data['base_loss_class'] = torch.nn.CrossEntropyLoss
         # training_loop_parameters.criterion = FairnessLoss(**fairness_related_meta_data)
 
