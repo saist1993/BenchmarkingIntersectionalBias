@@ -83,6 +83,42 @@ def parse_emo(emo: epoch_metric.CalculateEpochMetric, fairness_function):
     return emo.balanced_accuracy, max_eps, min_eps, df_fairness, if_fairness
 
 
+def train_burnin(train_parameters: SimpleTrainParameters, VB_CountModel,
+                 intersectionalGroups, stepSize, trainData, epsilonBase, lamda):
+    model, optimizer, device, criterion = \
+        train_parameters.model, train_parameters.optimizer, train_parameters.device, train_parameters.criterion
+
+    model.train()
+    track_output = []
+    track_input = []
+
+    # implement burnin later
+    for items in tqdm(train_parameters.iterator):
+        for key in items.keys():
+            items[key] = items[key].to(device)
+
+        optimizer.zero_grad()
+
+        # forward + backward + optimize
+        outputs = model(items)
+        loss = criterion(outputs['prediction'], items['labels'], items['aux_flattened'],
+                         mode='train')
+        tot_loss = torch.mean(loss)
+
+        # update Count model
+
+        # zero the parameter gradients
+        optimizer.zero_grad()
+        tot_loss.backward()
+        optimizer.step()
+
+        outputs['loss_batch'] = tot_loss.item()
+        track_output.append(outputs)
+        track_input.append(items)
+
+    return None
+
+
 def train_df(train_parameters: SimpleTrainParameters, VB_CountModel,
              intersectionalGroups, stepSize, trainData, epsilonBase, lamda):
     model, optimizer, device, criterion = \
@@ -193,6 +229,25 @@ def orchestrator(training_loop_parameters: TrainingLoopParameters,
 
     lamda = torch.tensor(
         0.01)
+
+    for ep in range(10):
+        train_params = SimpleTrainParameters(
+            model=training_loop_parameters.model,
+            iterator=train_iterator,
+            optimizer=training_loop_parameters.optimizer,
+            criterion=training_loop_parameters.criterion,
+            device=training_loop_parameters.device,
+            other_params={},
+            per_epoch_metric=None,
+            fairness_function=training_loop_parameters.fairness_function,
+            number_of_iterations=training_loop_parameters.number_of_iterations,
+            all_unique_groups=parsed_dataset.all_groups,
+            regularization_lambda=training_loop_parameters.regularization_lambda,
+            batch_size=training_loop_parameters.batch_size)
+
+        train_burnin(train_parameters=train_params, VB_CountModel=VB_CountModel,
+                     intersectionalGroups=intersectionalGroups, stepSize=0.001,
+                     trainData=trainData, epsilonBase=epsilonBase, lamda=lamda)
 
     for ep in range(training_loop_parameters.n_epochs):
         if logger: logger.info("start of epoch block")
