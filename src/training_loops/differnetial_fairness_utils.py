@@ -106,7 +106,9 @@ def computeBatchCounts(protectedAttributes, intersectGroups, predictions):
     countsClassOne = torch.zeros((len(intersectGroups)), dtype=torch.float)
     countsTotal = torch.zeros((len(intersectGroups)), dtype=torch.float)
     for i in range(len(predictions)):
-        index = np.where((intersectGroups == protectedAttributes[i]).all(axis=1))[0][0]
+        index = np.where(
+            (intersectGroups == protectedAttributes[i].detach().numpy()).all(axis=1))[
+            0][0]
         countsTotal[index] = countsTotal[index] + 1
         countsClassOne[index] = countsClassOne[index] + predictions[i]
     return countsClassOne, countsTotal
@@ -250,6 +252,7 @@ def training_fair_model(model, criterion,
               tot_loss.item())
 
     for epoch in range(num_epochs):
+
         for batch in range(0,
                            np.int64(np.floor(len(trainData) / miniBatch)) * miniBatch,
                            miniBatch):

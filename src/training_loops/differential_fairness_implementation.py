@@ -10,6 +10,8 @@ from arguments import TrainingLoopParameters, ParsedDataset, SimpleTrainParamete
 from .training_utils import get_iterators, collect_output, \
     get_fairness_related_meta_dict, mixup_sub_routine
 
+from .simple_training_loop import test
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,6 +28,8 @@ from torch.autograd import Variable
 
 from .differnetial_fairness_utils import computeEDFforData
 from .differnetial_fairness_utils import NeuralNet, training_fair_model
+from .differnetial_fairness_utils import computeBatchCounts, fairness_loss, \
+    stochasticCountModel
 
 
 def if_alpha(min_eps, max_eps, beta, fairness_function="equal_odds"):
@@ -79,8 +83,176 @@ def parse_emo(emo: epoch_metric.CalculateEpochMetric, fairness_function):
     return emo.balanced_accuracy, max_eps, min_eps, df_fairness, if_fairness
 
 
+def train_df(train_parameters: SimpleTrainParameters, VB_CountModel,
+             intersectionalGroups, stepSize, trainData, epsilonBase, lamda):
+    model, optimizer, device, criterion = \
+        train_parameters.model, train_parameters.optimizer, train_parameters.device, train_parameters.criterion
+
+    model.train()
+    track_output = []
+    track_input = []
+
+    # implement burnin later
+    for items in tqdm(train_parameters.iterator):
+        for key in items.keys():
+            items[key] = items[key].to(device)
+
+        optimizer.zero_grad()
+
+        VB_CountModel.countClass_hat.detach_()
+        VB_CountModel.countTotal_hat.detach_()
+        # forward + backward + optimize
+        outputs = model(items)
+        loss = criterion(outputs['prediction'], items['labels'], items['aux_flattened'],
+                         mode='train')
+        loss = torch.mean(loss)
+
+        # update Count model
+        countClass, countTotal = computeBatchCounts(items['aux'],
+                                                    intersectionalGroups,
+                                                    torch.nn.functional.sigmoid(
+                                                        outputs['prediction']))
+        # thetaModel(stepSize,theta_batch)
+        VB_CountModel(stepSize, countClass, countTotal, len(trainData),
+                      train_parameters.batch_size)
+
+        # fairness constraint
+        lossDF = fairness_loss(epsilonBase, VB_CountModel)
+        tot_loss = loss + lamda * lossDF
+
+        # zero the parameter gradients
+        optimizer.zero_grad()
+        tot_loss.backward()
+        optimizer.step()
+
+        outputs['loss_batch'] = tot_loss.item()
+        track_output.append(outputs)
+        track_input.append(items)
+
+    model.eval()
+    predictions, labels, s, loss = collect_output(all_batch_outputs=track_output,
+                                                  all_batch_inputs=track_input)
+    em = EpochMetric(
+        predictions=predictions,
+        labels=labels,
+        s=s,
+        fairness_function=train_parameters.fairness_function)
+
+    emo = epoch_metric.CalculateEpochMetric(epoch_metric=em).run()
+    emo.loss = loss
+
+    return emo
+
+
+def get_raw_data(iterator):
+    all_label = []
+    all_s_flat = []
+    all_s = []
+    all_x = []
+
+    for batch_input in iterator:
+        all_label.append(batch_input['labels'].numpy())
+        all_s_flat.append(batch_input['aux_flattened'].numpy())
+        all_s.append(batch_input['aux'].numpy())
+        all_x.append(batch_input['input'].numpy())
+
+    all_label = np.hstack(all_label)
+    all_s_flat = np.hstack(all_s_flat)
+    all_x = np.vstack(all_x)
+    all_s = np.vstack(all_s)
+
+    return all_x, all_label, all_s
+
+
 def orchestrator(training_loop_parameters: TrainingLoopParameters,
                  parsed_dataset: ParsedDataset):
+    if training_loop_parameters.log_run:
+        logger = logging.getLogger(training_loop_parameters.unique_id_for_run)
+    else:
+        logger = False
+
+    original_train_iterator, train_iterator, valid_iterator, test_iterator = get_iterators(
+        training_loop_parameters,
+        parsed_dataset,
+        shuffle=True)
+
+    dev_X, dev_y, dev_S = get_raw_data(valid_iterator)
+
+    X, y, S = get_raw_data(train_iterator)
+
+    test_X, test_y, test_S = get_raw_data(test_iterator)
+
+    trainData = torch.from_numpy(X)
+    intersectionalGroups = np.unique(S, axis=0)
+
+    VB_CountModel = stochasticCountModel(len(intersectionalGroups), len(trainData),
+                                         training_loop_parameters.batch_size)
+
+    epsilonBase = torch.tensor(
+        0.0)
+
+    lamda = torch.tensor(
+        0.01)
+
+    for ep in range(training_loop_parameters.n_epochs):
+        if logger: logger.info("start of epoch block")
+
+        train_params = SimpleTrainParameters(
+            model=training_loop_parameters.model,
+            iterator=train_iterator,
+            optimizer=training_loop_parameters.optimizer,
+            criterion=training_loop_parameters.criterion,
+            device=training_loop_parameters.device,
+            other_params={},
+            per_epoch_metric=None,
+            fairness_function=training_loop_parameters.fairness_function,
+            number_of_iterations=training_loop_parameters.number_of_iterations,
+            all_unique_groups=parsed_dataset.all_groups,
+            regularization_lambda=training_loop_parameters.regularization_lambda,
+            batch_size=training_loop_parameters.batch_size)
+
+        train_emo = train_df(train_parameters=train_params, VB_CountModel=VB_CountModel,
+                             intersectionalGroups=intersectionalGroups, stepSize=0.001,
+                             trainData=trainData, epsilonBase=epsilonBase, lamda=lamda)
+
+        train_emo.epoch_number = ep
+        if logger: logger.info(f"train epoch metric: {train_emo}")
+
+        valid_params = SimpleTrainParameters(
+            model=training_loop_parameters.model,
+            iterator=valid_iterator,
+            optimizer=training_loop_parameters.optimizer,
+            criterion=training_loop_parameters.criterion,
+            device=training_loop_parameters.device,
+            other_params={},
+            per_epoch_metric=None,
+            fairness_function=training_loop_parameters.fairness_function)
+
+        valid_emo = test(train_parameters=valid_params)
+        valid_emo.epoch_number = ep
+        if logger: logger.info(f"valid epoch metric: {valid_emo}")
+
+        test_params = SimpleTrainParameters(
+            model=training_loop_parameters.model,
+            iterator=test_iterator,
+            optimizer=training_loop_parameters.optimizer,
+            criterion=training_loop_parameters.criterion,
+            device=training_loop_parameters.device,
+            other_params={},
+            per_epoch_metric=None,
+            fairness_function=training_loop_parameters.fairness_function)
+
+        test_emo = test(train_parameters=test_params)
+        test_emo.epoch_number = ep
+        if logger: logger.info(f"test epoch metric: {test_emo}")
+
+        if logger: logger.info("end of epoch block")
+
+    return training_loop_parameters.model
+
+
+def old_orchestrator(training_loop_parameters: TrainingLoopParameters,
+                     parsed_dataset: ParsedDataset):
     """
     :param training_loop_parameters: contains all information needed to train the model and the information related to settings
     :param parsed_dataset: contains all information related to dataset.

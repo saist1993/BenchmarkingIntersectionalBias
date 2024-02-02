@@ -104,10 +104,9 @@ def runner(runner_arguments: arguments.RunnerArguments):
             training_loop_parameters=training_loop_params,
             parsed_dataset=parsed_dataset)
     if training_loop_params.method == "post_processing_df":
-        output = differential_fairness_implementation.orchestrator(
+        _ = differential_fairness_implementation.orchestrator(
             training_loop_parameters=training_loop_params,
             parsed_dataset=parsed_dataset)
-        print(f"final output is {output}")
     else:
         _ = simple_training_loop.orchestrator(
             training_loop_parameters=training_loop_params,
