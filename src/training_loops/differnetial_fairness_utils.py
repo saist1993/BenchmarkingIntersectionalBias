@@ -114,6 +114,27 @@ def computeBatchCounts(protectedAttributes, intersectGroups, predictions):
     return countsClassOne, countsTotal
 
 
+def computeBatchCounts_false_positive_rate(protectedAttributes, intersectGroups,
+                                           predictions, labels):
+    predictions = torch.argmax(predictions, 1)
+    countsClassOne = torch.zeros((len(intersectGroups)), dtype=torch.float)
+    countsTotal = torch.zeros((len(intersectGroups)), dtype=torch.float)
+    custom_counts = torch.zeros((len(intersectGroups)), dtype=torch.float)
+    for i in range(len(predictions)):
+        index = np.where(
+            (intersectGroups == protectedAttributes[i].detach().numpy()).all(axis=1))[
+            0][0]
+        countsTotal[index] = countsTotal[index] + 1
+        if predictions[i] == 1 and labels[i] == 0:
+            countsClassOne[index] = countsClassOne[index] + 1
+
+        if labels[i] == 0:
+            custom_counts[index] = custom_counts[index] + 1
+
+    countsClassOne = countsClassOne / custom_counts
+    return countsClassOne, countsTotal
+
+
 class stochasticCountModel(nn.Module):
     def __init__(self, no_of_groups, N, batch_size):
         super(stochasticCountModel, self).__init__()

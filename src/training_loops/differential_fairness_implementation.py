@@ -29,7 +29,7 @@ from torch.autograd import Variable
 from .differnetial_fairness_utils import computeEDFforData
 from .differnetial_fairness_utils import NeuralNet, training_fair_model
 from .differnetial_fairness_utils import computeBatchCounts, fairness_loss, \
-    stochasticCountModel
+    stochasticCountModel, computeBatchCounts_false_positive_rate
 
 
 def if_alpha(min_eps, max_eps, beta, fairness_function="equal_odds"):
@@ -148,6 +148,13 @@ def train_df(train_parameters: SimpleTrainParameters, VB_CountModel,
                                                     intersectionalGroups,
                                                     torch.nn.functional.sigmoid(
                                                         outputs['prediction']))
+
+        # countClass, countTotal = computeBatchCounts_false_positive_rate(items['aux'],
+        #                                                                 intersectionalGroups,
+        #                                                                 torch.nn.functional.sigmoid(
+        #                                                                     outputs[
+        #                                                                         'prediction']),
+        #                                                                 items['labels'])
         # thetaModel(stepSize,theta_batch)
         VB_CountModel(stepSize, countClass, countTotal, len(trainData),
                       train_parameters.batch_size)
@@ -299,6 +306,7 @@ def orchestrator(training_loop_parameters: TrainingLoopParameters,
 
         test_emo = test(train_parameters=test_params)
         test_emo.epoch_number = ep
+        print(parse_emo(test_emo, training_loop_parameters.fairness_function))
         if logger: logger.info(f"test epoch metric: {test_emo}")
 
         if logger: logger.info("end of epoch block")
