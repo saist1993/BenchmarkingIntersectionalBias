@@ -95,9 +95,14 @@ class SimpleModelGenerator(nn.Module):
         super().__init__()
 
         if number_of_params == 3:
-            self.lambda_params = torch.nn.Parameter(torch.FloatTensor([0.33, 0.33, 0.33]))
+            self.lambda_params = torch.nn.Parameter(
+                torch.FloatTensor([0.33, 0.33, 0.33]))
         elif number_of_params == 4:
-            self.lambda_params = torch.nn.Parameter(torch.FloatTensor([0.25, 0.25, 0.25, 0.25]))
+            self.lambda_params = torch.nn.Parameter(
+                torch.FloatTensor([0.25, 0.25, 0.25, 0.25]))
+        elif number_of_params == 5:
+            self.lambda_params = torch.nn.Parameter(
+                torch.FloatTensor([0.20, 0.20, 0.20, 0.20, 0.20]))
         elif number_of_params == 2:
             self.lambda_params = torch.nn.Parameter(torch.FloatTensor([0.5, 0.5]))
 
@@ -134,12 +139,15 @@ class SimpleModelGeneratorIntermediate(nn.Module):
         super().__init__()
 
         if number_of_params == 3:
-            self.lambda_params = torch.nn.Parameter(torch.FloatTensor([0.33, 0.33, 0.33]))
+            self.lambda_params = torch.nn.Parameter(
+                torch.FloatTensor([0.33, 0.33, 0.33]))
         elif number_of_params == 4:
-            self.lambda_params = torch.nn.Parameter(torch.FloatTensor([0.1, 0.1, 0.1, 0.1]))
+            self.lambda_params = torch.nn.Parameter(
+                torch.FloatTensor([0.1, 0.1, 0.1, 0.1]))
 
         # self.more_lambda_params = torch.nn.Linear(input_dim, input_dim, bias=False)
-        self.more_lambda_params = torch.nn.Parameter(torch.FloatTensor(torch.randn(input_dim)))
+        self.more_lambda_params = torch.nn.Parameter(
+            torch.FloatTensor(torch.randn(input_dim)))
         # nn.init.constant_(self.more_lambda_params.weight, 1.0)
         print("here")
         # self.more_lambda_params = [torch.nn.init.orthogonal_(l.reshape(1,-1)).squeeze() for l in self.more_lambda_params]
@@ -278,7 +286,8 @@ def _mmd2(K_XX, K_XY, K_YY, const_diagonal=False, biased=False):
 
 
 def _mmd2_and_ratio(K_XX, K_XY, K_YY, const_diagonal=False, biased=False):
-    mmd2, var_est = _mmd2_and_variance(K_XX, K_XY, K_YY, const_diagonal=const_diagonal, biased=biased)
+    mmd2, var_est = _mmd2_and_variance(K_XX, K_XY, K_YY, const_diagonal=const_diagonal,
+                                       biased=biased)
     loss = mmd2 / torch.sqrt(torch.clamp(var_est, min=min_var_est))
     return loss, mmd2, var_est
 
@@ -324,11 +333,14 @@ def _mmd2_and_variance(K_XX, K_XY, K_YY, const_diagonal=False, biased=False):
 
     var_est = (
             2.0 / (m ** 2 * (m - 1.0) ** 2) * (
-            2 * Kt_XX_sums.dot(Kt_XX_sums) - Kt_XX_2_sum + 2 * Kt_YY_sums.dot(Kt_YY_sums) - Kt_YY_2_sum)
-            - (4.0 * m - 6.0) / (m ** 3 * (m - 1.0) ** 3) * (Kt_XX_sum ** 2 + Kt_YY_sum ** 2)
+            2 * Kt_XX_sums.dot(Kt_XX_sums) - Kt_XX_2_sum + 2 * Kt_YY_sums.dot(
+        Kt_YY_sums) - Kt_YY_2_sum)
+            - (4.0 * m - 6.0) / (m ** 3 * (m - 1.0) ** 3) * (
+                        Kt_XX_sum ** 2 + Kt_YY_sum ** 2)
             + 4.0 * (m - 2.0) / (m ** 3 * (m - 1.0) ** 2) * (
                     K_XY_sums_1.dot(K_XY_sums_1) + K_XY_sums_0.dot(K_XY_sums_0))
-            - 4.0 * (m - 3.0) / (m ** 3 * (m - 1.0) ** 2) * (K_XY_2_sum) - (8 * m - 12) / (
+            - 4.0 * (m - 3.0) / (m ** 3 * (m - 1.0) ** 2) * (K_XY_2_sum) - (
+                        8 * m - 12) / (
                     m ** 5 * (m - 1)) * K_XY_sum ** 2
             + 8.0 / (m ** 3 * (m - 1.0)) * (
                     1.0 / m * (Kt_XX_sum + Kt_YY_sum) * K_XY_sum

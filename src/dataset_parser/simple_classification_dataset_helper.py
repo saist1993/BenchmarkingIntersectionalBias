@@ -6,9 +6,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-
 folder_location = '../datasets'
-
 
 
 def get_celeb_data(load_data_size=None):
@@ -31,7 +29,8 @@ def get_celeb_data(load_data_size=None):
     """
 
     # src_path = os.path.dirname(os.path.realpath(__file__))
-    df = pd.read_csv(os.path.join(folder_location, 'celebA/list_attr_celeba.csv'), sep=';')
+    df = pd.read_csv(os.path.join(folder_location, 'celebA/list_attr_celeba.csv'),
+                     sep=';')
     df = df.rename(columns={'Male': 'sex'})
 
     s = -1 * df['sex']
@@ -86,7 +85,8 @@ def get_celeb_multigroups_data():
     """
 
     # src_path = os.path.dirname(os.path.realpath(__file__))
-    df = pd.read_csv(os.path.join(folder_location, 'celebA/list_attr_celeba.csv'), sep=';')
+    df = pd.read_csv(os.path.join(folder_location, 'celebA/list_attr_celeba.csv'),
+                     sep=';')
     df = df.rename(columns={'Male': 'sex'})
 
     s1 = -1 * df['sex']
@@ -101,7 +101,8 @@ def get_celeb_multigroups_data():
 
     X = X[:, (X != 0).any(axis=0)]
 
-    _, s = np.unique(np.hstack((s1.reshape(-1, 1), s2.reshape(-1, 1))), return_inverse=True, axis=0)
+    _, s = np.unique(np.hstack((s1.reshape(-1, 1), s2.reshape(-1, 1))),
+                     return_inverse=True, axis=0)
 
     return X, y, s
 
@@ -126,15 +127,16 @@ def get_celeb_multigroups_data_with_varying_protected_group(k=5):
     """
 
     # src_path = os.path.dirname(os.path.realpath(__file__))
-    if k > 4:
+    if k > 5:
         raise NotImplementedError
 
-    df = pd.read_csv(os.path.join(folder_location, 'celebA/list_attr_celeba.csv'), sep=',')
+    df = pd.read_csv(os.path.join(folder_location, 'celebA/list_attr_celeba.csv'),
+                     sep=',')
     df = df.rename(columns={'Male': 'sex'})
 
     # protected_attribute = ['Pale_Skin', 'sex', 'Narrow_Eyes', 'Big_Nose', 'Young', 'Straight_Hair', 'Attractive'][:k]
-    protected_attribute = ['sex', 'Young', 'Attractive', 'Pale_Skin'][:k]
-    s = [df[i]*-1 for i in protected_attribute]
+    protected_attribute = ['sex', 'Young', 'Attractive', 'Pale_Skin', 'Narrow_Eyes'][:k]
+    s = [df[i] * -1 for i in protected_attribute]
     y = df['Smiling']
     df = df.drop(columns=['Smiling', 'image_id'])
     df = df.drop(columns=protected_attribute)
@@ -148,13 +150,11 @@ def get_celeb_multigroups_data_with_varying_protected_group(k=5):
 
     X = X[:, (X != 0).any(axis=0)]
 
-
     X = np.load(os.path.join(folder_location, 'celebA/encoded_image.npy'))
 
     # _, s = np.unique(np.hstack((s1.reshape(-1, 1), s2.reshape(-1, 1))), return_inverse=True, axis=0)
 
     return X, y, s
-
 
 
 def get_adult_data(load_data_size=None):
@@ -178,7 +178,8 @@ def get_adult_data(load_data_size=None):
 
     def mapping(tuple):
         # native country
-        tuple['native-country'] = "US" if tuple['native-country'] == "United-States" else "NonUS"
+        tuple['native-country'] = "US" if tuple[
+                                              'native-country'] == "United-States" else "NonUS"
         # education
         if tuple['education'] in ["Preschool", "1st-4th", "5th-6th", "7th-8th"]:
             tuple['education'] = "prim-middle-school"
@@ -196,8 +197,10 @@ def get_adult_data(load_data_size=None):
     sensitive_attr_map = {'Male': 1, 'Female': -1}
     label_map = {'>50K': 1, '<=50K': -1}
 
-    attrs = ['workclass', 'education', 'marital-status', 'occupation', 'relationship', 'native-country']
-    int_attrs = ['age', 'education-num', 'capital-gain', 'capital-loss', 'hours-per-week',
+    attrs = ['workclass', 'education', 'marital-status', 'occupation', 'relationship',
+             'native-country']
+    int_attrs = ['age', 'education-num', 'capital-gain', 'capital-loss',
+                 'hours-per-week',
                  'fnlwgt']  # we need to add fnlwgt, otherwise we have too many duplicates
 
     s = df['sex'].map(sensitive_attr_map).astype(int)
@@ -205,7 +208,8 @@ def get_adult_data(load_data_size=None):
 
     x = pd.DataFrame(data=None)
     for x_var in attrs:
-        x = pd.concat([x, pd.get_dummies(df[x_var], prefix=x_var, drop_first=False)], axis=1)
+        x = pd.concat([x, pd.get_dummies(df[x_var], prefix=x_var, drop_first=False)],
+                      axis=1)
     for x_var in int_attrs:
         x = pd.concat([x, normalize(x=df[x_var])], axis=1)
 
@@ -253,9 +257,11 @@ def get_adult_multigroups_data(load_data_size=None):
     s: numpy array
         The binary sensitive attribute of the datapoints with shape=(number_points,).
     """
+
     def mapping(tuple):
         # native country
-        tuple['native-country'] = "US" if tuple['native-country'] == "United-States" else "NonUS"
+        tuple['native-country'] = "US" if tuple[
+                                              'native-country'] == "United-States" else "NonUS"
         # education
         if tuple['education'] in ["Preschool", "1st-4th", "5th-6th", "7th-8th"]:
             tuple['education'] = "prim-middle-school"
@@ -276,12 +282,14 @@ def get_adult_multigroups_data(load_data_size=None):
 
     # age being the sensitive attribute
     age_bins = [-np.inf, 50, np.inf]
-    sensitive_attr_map3 = [1,-1]
+    sensitive_attr_map3 = [1, -1]
 
     label_map = {'>50K': 1, '<=50K': -1}
 
-    attrs = ['workclass', 'education', 'marital-status', 'occupation', 'relationship', 'native-country']
-    int_attrs = [ 'education-num', 'capital-gain', 'capital-loss', 'hours-per-week', 'fnlwgt']
+    attrs = ['workclass', 'education', 'marital-status', 'occupation', 'relationship',
+             'native-country']
+    int_attrs = ['education-num', 'capital-gain', 'capital-loss', 'hours-per-week',
+                 'fnlwgt']
 
     s1 = df['sex'].map(sensitive_attr_map1).astype(int)
     s2 = df['race'].map(sensitive_attr_map2).astype(int)
@@ -290,7 +298,8 @@ def get_adult_multigroups_data(load_data_size=None):
 
     x = pd.DataFrame(data=None)
     for x_var in attrs:
-        x = pd.concat([x, pd.get_dummies(df[x_var], prefix=x_var, drop_first=False)], axis=1)
+        x = pd.concat([x, pd.get_dummies(df[x_var], prefix=x_var, drop_first=False)],
+                      axis=1)
     for x_var in int_attrs:
         x = pd.concat([x, normalize(x=df[x_var])], axis=1)
 
@@ -324,7 +333,7 @@ def get_adult_multigroups_data(load_data_size=None):
 
     # return X[unique_indices,:], y[unique_indices], s1[unique_indices], s2[unique_indices]
     # _, s = np.unique(np.hstack((s1.reshape(-1, 1), s2.reshape(-1, 1))), return_inverse=True, axis=0)
-    s = np.vstack((s1,s2, s3)).transpose()
+    s = np.vstack((s1, s2, s3)).transpose()
 
     return X, y, s
 
@@ -342,8 +351,6 @@ def get_adult_multigroups_data_sensr(load_data_size=None):
     from aif360.datasets import BinaryLabelDataset
     from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-
-
     def mapping(tuple):
         # native country
         # tuple['native-country'] = "US" if tuple['native-country'] == "United-States" else "NonUS"
@@ -355,31 +362,61 @@ def get_adult_multigroups_data_sensr(load_data_size=None):
         tuple['race'] = 'NonWhite' if tuple['race'] != "White" else 'White'
         return tuple
 
-
-    headers = ['age', 'workclass', 'fnlwgt', 'education', 'education-num', 'marital-stataus', 'occupation', 'relationship', 'race', 'sex', 'capital-gain', 'capital-loss', 'hours-per-week', 'native-country', 'y']
-    train = pd.read_csv(os.path.join(folder_location, 'adult_sensr/adult.data'), header = None)
-    test = pd.read_csv(os.path.join(folder_location, 'adult_sensr/adult.test'), header = None)
+    headers = ['age', 'workclass', 'fnlwgt', 'education', 'education-num',
+               'marital-stataus', 'occupation', 'relationship', 'race', 'sex',
+               'capital-gain', 'capital-loss', 'hours-per-week', 'native-country', 'y']
+    train = pd.read_csv(os.path.join(folder_location, 'adult_sensr/adult.data'),
+                        header=None)
+    test = pd.read_csv(os.path.join(folder_location, 'adult_sensr/adult.test'),
+                       header=None)
     df = pd.concat([train, test], ignore_index=True)
     df.columns = headers
 
-    df['y'] = df['y'].replace({' <=50K.': 0, ' >50K.': 1, ' >50K': 1, ' <=50K': 0 })
+    df['y'] = df['y'].replace({' <=50K.': 0, ' >50K.': 1, ' >50K': 1, ' <=50K': 0})
 
     df = df.drop(df[(df[headers[-2]] == ' ?') | (df[headers[6]] == ' ?')].index)
-    df = pd.get_dummies(df, columns=[headers[1], headers[5], headers[6], headers[7], headers[9], headers[8], 'native-country'])
+    df = pd.get_dummies(df, columns=[headers[1], headers[5], headers[6], headers[7],
+                                     headers[9], headers[8], 'native-country'])
 
-    delete_these = ['race_ Amer-Indian-Eskimo','race_ Asian-Pac-Islander','race_ Black','race_ Other', 'sex_ Female']
+    delete_these = ['race_ Amer-Indian-Eskimo', 'race_ Asian-Pac-Islander',
+                    'race_ Black', 'race_ Other', 'sex_ Female']
 
-    delete_these += ['native-country_ Cambodia', 'native-country_ Canada', 'native-country_ China', 'native-country_ Columbia', 'native-country_ Cuba', 'native-country_ Dominican-Republic', 'native-country_ Ecuador', 'native-country_ El-Salvador', 'native-country_ England', 'native-country_ France', 'native-country_ Germany', 'native-country_ Greece', 'native-country_ Guatemala', 'native-country_ Haiti', 'native-country_ Holand-Netherlands', 'native-country_ Honduras', 'native-country_ Hong', 'native-country_ Hungary', 'native-country_ India', 'native-country_ Iran', 'native-country_ Ireland', 'native-country_ Italy', 'native-country_ Jamaica', 'native-country_ Japan', 'native-country_ Laos', 'native-country_ Mexico', 'native-country_ Nicaragua', 'native-country_ Outlying-US(Guam-USVI-etc)', 'native-country_ Peru', 'native-country_ Philippines', 'native-country_ Poland', 'native-country_ Portugal', 'native-country_ Puerto-Rico', 'native-country_ Scotland', 'native-country_ South', 'native-country_ Taiwan', 'native-country_ Thailand', 'native-country_ Trinadad&Tobago', 'native-country_ United-States', 'native-country_ Vietnam', 'native-country_ Yugoslavia']
+    delete_these += ['native-country_ Cambodia', 'native-country_ Canada',
+                     'native-country_ China', 'native-country_ Columbia',
+                     'native-country_ Cuba', 'native-country_ Dominican-Republic',
+                     'native-country_ Ecuador', 'native-country_ El-Salvador',
+                     'native-country_ England', 'native-country_ France',
+                     'native-country_ Germany', 'native-country_ Greece',
+                     'native-country_ Guatemala', 'native-country_ Haiti',
+                     'native-country_ Holand-Netherlands', 'native-country_ Honduras',
+                     'native-country_ Hong', 'native-country_ Hungary',
+                     'native-country_ India', 'native-country_ Iran',
+                     'native-country_ Ireland', 'native-country_ Italy',
+                     'native-country_ Jamaica', 'native-country_ Japan',
+                     'native-country_ Laos', 'native-country_ Mexico',
+                     'native-country_ Nicaragua',
+                     'native-country_ Outlying-US(Guam-USVI-etc)',
+                     'native-country_ Peru', 'native-country_ Philippines',
+                     'native-country_ Poland', 'native-country_ Portugal',
+                     'native-country_ Puerto-Rico', 'native-country_ Scotland',
+                     'native-country_ South', 'native-country_ Taiwan',
+                     'native-country_ Thailand', 'native-country_ Trinadad&Tobago',
+                     'native-country_ United-States', 'native-country_ Vietnam',
+                     'native-country_ Yugoslavia']
 
     delete_these += ['fnlwgt', 'education']
 
     df.drop(delete_these, axis=1, inplace=True)
 
-    dataset_orig =  BinaryLabelDataset(df=df, label_names=['y'], protected_attribute_names=['sex_ Male', 'race_ White'])
+    dataset_orig = BinaryLabelDataset(df=df, label_names=['y'],
+                                      protected_attribute_names=['sex_ Male',
+                                                                 'race_ White'])
 
     # we will standardize continous features
-    continous_features = ['age', 'education-num', 'capital-gain', 'capital-loss', 'hours-per-week']
-    continous_features_indices = [dataset_orig.feature_names.index(feat) for feat in continous_features]
+    continous_features = ['age', 'education-num', 'capital-gain', 'capital-loss',
+                          'hours-per-week']
+    continous_features_indices = [dataset_orig.feature_names.index(feat) for feat in
+                                  continous_features]
     SS = StandardScaler().fit(dataset_orig.features[:, continous_features_indices])
     dataset_orig.features[:, continous_features_indices] = SS.transform(
         dataset_orig.features[:, continous_features_indices])
@@ -388,21 +425,18 @@ def get_adult_multigroups_data_sensr(load_data_size=None):
     y = dataset_orig.labels
 
     one_hot = OneHotEncoder(sparse=False)
-    one_hot.fit(y.reshape(-1,1))
+    one_hot.fit(y.reshape(-1, 1))
     names_income = one_hot.categories_
-    y = np.argmax(one_hot.transform(y.reshape(-1,1)), axis=1)
+    y = np.argmax(one_hot.transform(y.reshape(-1, 1)), axis=1)
 
-    s_gender = dataset_orig.features[:,dataset_orig.feature_names.index('sex_ Male')]
+    s_gender = dataset_orig.features[:, dataset_orig.feature_names.index('sex_ Male')]
 
     s_race = dataset_orig.features[:, dataset_orig.feature_names.index('race_ White')]
 
-    s_concat, s = np.unique(np.hstack((s_gender.reshape(-1, 1), s_race.reshape(-1, 1))), return_inverse=True, axis=0)
+    s_concat, s = np.unique(np.hstack((s_gender.reshape(-1, 1), s_race.reshape(-1, 1))),
+                            return_inverse=True, axis=0)
 
     return X, y, s, s_concat
-
-
-
-
 
 
 def load_adult_data_zafar(load_data_size=None):
@@ -411,7 +445,8 @@ def load_adult_data_zafar(load_data_size=None):
         if it is a number, say 10000, then we will return randomly selected 10K examples
     """
 
-    attrs = ['age', 'workclass', 'fnlwgt', 'education', 'education_num', 'marital_status', 'occupation', 'relationship',
+    attrs = ['age', 'workclass', 'fnlwgt', 'education', 'education_num',
+             'marital_status', 'occupation', 'relationship',
              'race', 'sex', 'capital_gain', 'capital_loss',
              'hours_per_week', 'native_country']  # all attributes
     int_attrs = ['age', 'fnlwgt', 'education_num', 'capital_gain', 'capital_loss',
@@ -540,7 +575,8 @@ def get_one_hot_encoding(in_arr):
     assert (len(in_arr.shape) == 1)  # no column, means it was a 1-D arr
     attr_vals_uniq_sorted = sorted(list(set(in_arr)))
     num_uniq_vals = len(attr_vals_uniq_sorted)
-    if (num_uniq_vals == 2) and (attr_vals_uniq_sorted[0] == 0 and attr_vals_uniq_sorted[1] == 1):
+    if (num_uniq_vals == 2) and (
+            attr_vals_uniq_sorted[0] == 0 and attr_vals_uniq_sorted[1] == 1):
         return in_arr, None
 
     index_dict = {}  # value to the column number
@@ -579,19 +615,28 @@ def get_crimeCommunities_data(load_data_size=None):
     """
 
     # src_path = os.path.dirname(os.path.realpath(__file__))
-    df = pd.read_csv(os.path.join(folder_location, 'crimeCommunities/communities_data.csv'))
+    df = pd.read_csv(
+        os.path.join(folder_location, 'crimeCommunities/communities_data.csv'))
 
-    df['ViolentCrimesPerPop'] = df['ViolentCrimesPerPop'].apply(lambda x: -1 if x <= 0.24 else 1)
-    df['racePctWhite'] = df['racePctWhite'].apply(lambda x: 'other' if x <= 0.75 else 'white')
-    df = df.drop(columns=['state', 'county', 'community', 'communityname string', 'fold', 'OtherPerCap',
-                          # 'medIncome', 'pctWWage', 'pctWInvInc','medFamInc',
-                          'LemasSwornFT', 'LemasSwFTPerPop', 'LemasSwFTFieldOps', 'LemasSwFTFieldPerPop',
-                          'LemasTotalReq',
-                          'LemasTotReqPerPop', 'PolicReqPerOffic', 'PolicPerPop', 'RacialMatchCommPol',
-                          'PctPolicWhite', 'PctPolicBlack', 'PctPolicHisp', 'PctPolicAsian', 'PctPolicMinor',
-                          'OfficAssgnDrugUnits',
-                          'NumKindsDrugsSeiz', 'PolicAveOTWorked', 'PolicCars', 'PolicOperBudg', 'LemasPctPolicOnPatr',
-                          'LemasGangUnitDeploy', 'LemasPctOfficDrugUn', 'PolicBudgPerPop'])
+    df['ViolentCrimesPerPop'] = df['ViolentCrimesPerPop'].apply(
+        lambda x: -1 if x <= 0.24 else 1)
+    df['racePctWhite'] = df['racePctWhite'].apply(
+        lambda x: 'other' if x <= 0.75 else 'white')
+    df = df.drop(
+        columns=['state', 'county', 'community', 'communityname string', 'fold',
+                 'OtherPerCap',
+                 # 'medIncome', 'pctWWage', 'pctWInvInc','medFamInc',
+                 'LemasSwornFT', 'LemasSwFTPerPop', 'LemasSwFTFieldOps',
+                 'LemasSwFTFieldPerPop',
+                 'LemasTotalReq',
+                 'LemasTotReqPerPop', 'PolicReqPerOffic', 'PolicPerPop',
+                 'RacialMatchCommPol',
+                 'PctPolicWhite', 'PctPolicBlack', 'PctPolicHisp', 'PctPolicAsian',
+                 'PctPolicMinor',
+                 'OfficAssgnDrugUnits',
+                 'NumKindsDrugsSeiz', 'PolicAveOTWorked', 'PolicCars', 'PolicOperBudg',
+                 'LemasPctPolicOnPatr',
+                 'LemasGangUnitDeploy', 'LemasPctOfficDrugUn', 'PolicBudgPerPop'])
     # 29 attributes are dropped because of missing values in these features, or because they contain IDs or names
 
     df = df.rename(columns={'racePctWhite': 'race'})
@@ -677,7 +722,8 @@ def get_german_data(load_data_size=None):
     for x_var in x_vars_ordinal:
         x = pd.concat([x, normalize(x=df[x_var])], axis=1)
     for x_var in x_vars_categorical:
-        x = pd.concat([x, pd.get_dummies(df[x_var], prefix=x_var, drop_first=False)], axis=1)
+        x = pd.concat([x, pd.get_dummies(df[x_var], prefix=x_var, drop_first=False)],
+                      axis=1)
 
     X = x.to_numpy()
     y = y.to_numpy()
@@ -732,8 +778,10 @@ def get_compas_data(load_data_size=None):
 
     df = df.drop(columns=['is_recid', 'decile_score', 'score_text'])
 
-    racedict = {'Caucasian': 'White', 'Other': 'NonWhite', 'African-American': 'NonWhite',
-                'Hispanic': 'NonWhite', 'Asian': 'NonWhite', 'Native American': 'NonWhite'}
+    racedict = {'Caucasian': 'White', 'Other': 'NonWhite',
+                'African-American': 'NonWhite',
+                'Hispanic': 'NonWhite', 'Asian': 'NonWhite',
+                'Native American': 'NonWhite'}
     df = df.assign(race=df['race'].replace(to_replace=racedict))
 
     sensitive_attr_map = {'White': 1, 'NonWhite': -1}
@@ -743,14 +791,16 @@ def get_compas_data(load_data_size=None):
     y = df['two_year_recid'].map(label_map).astype(int)
 
     x_vars_categorical = ['age_cat', 'c_charge_degree', 'sex']
-    x_vars_ordinal = ['age', "priors_count", 'juv_fel_count', 'juv_misd_count', 'juv_other_count',
+    x_vars_ordinal = ['age', "priors_count", 'juv_fel_count', 'juv_misd_count',
+                      'juv_other_count',
                       'days_b_screening_arrest']
 
     x = pd.DataFrame(data=None)
     for x_var in x_vars_ordinal:
         x = pd.concat([x, normalize(df[x_var])], axis=1)
     for x_var in x_vars_categorical:
-        x = pd.concat([x, pd.get_dummies(df[x_var], prefix=x_var, drop_first=False)], axis=1)
+        x = pd.concat([x, pd.get_dummies(df[x_var], prefix=x_var, drop_first=False)],
+                      axis=1)
 
     X = x.to_numpy()
     y = y.to_numpy()
@@ -800,19 +850,22 @@ def load_compas_data_zafar():
 
     # These filters are the same as propublica (refer to https://github.com/propublica/compas-analysis)
     # If the charge date of a defendants Compas scored crime was not within 30 days from when the person was arrested, we assume that because of data quality reasons, that we do not have the right offense.
-    idx = np.logical_and(data["days_b_screening_arrest"] <= 30, data["days_b_screening_arrest"] >= -30)
+    idx = np.logical_and(data["days_b_screening_arrest"] <= 30,
+                         data["days_b_screening_arrest"] >= -30)
 
     # We coded the recidivist flag -- is_recid -- to be -1 if we could not find a compas case at all.
     idx = np.logical_and(idx, data["is_recid"] != -1)
 
     # In a similar vein, ordinary traffic offenses -- those with a c_charge_degree of 'O' -- will not result in Jail time are removed (only two of them).
-    idx = np.logical_and(idx, data["c_charge_degree"] != "O")  # F: felony, M: misconduct
+    idx = np.logical_and(idx,
+                         data["c_charge_degree"] != "O")  # F: felony, M: misconduct
 
     # We filtered the underlying data from Broward county to include only those rows representing people who had either recidivated in two years, or had at least two years outside of a correctional facility.
     idx = np.logical_and(idx, data["score_text"] != "NA")
 
     # we will only consider blacks and whites for this analysis
-    idx = np.logical_and(idx, np.logical_or(data["race"] == "African-American", data["race"] == "Caucasian"))
+    idx = np.logical_and(idx, np.logical_or(data["race"] == "African-American",
+                                            data["race"] == "Caucasian"))
 
     # select the examples that satisfy this criteria
     for k in data.keys():
@@ -836,7 +889,8 @@ def load_compas_data_zafar():
         if attr in CONT_VARIABLES:
             vals = [float(v) for v in vals]
             vals = preprocessing.scale(vals)  # 0 mean and 1 variance
-            vals = np.reshape(vals, (len(y), -1))  # convert from 1-d arr to a 2-d arr with one col
+            vals = np.reshape(vals, (
+            len(y), -1))  # convert from 1-d arr to a 2-d arr with one col
 
         else:  # for binary categorical variables, the label binarizer uses just one var instead of two
             lb = preprocessing.LabelBinarizer()
@@ -862,7 +916,8 @@ def load_compas_data_zafar():
     # convert the sensitive feature to 1-d array
     x_control = dict(x_control)
     for k in x_control.keys():
-        assert (x_control[k].shape[1] == 1)  # make sure that the sensitive feature is binary after one hot encoding
+        assert (x_control[k].shape[
+                    1] == 1)  # make sure that the sensitive feature is binary after one hot encoding
         x_control[k] = np.array(x_control[k]).flatten()
 
     # sys.exit(1)
@@ -926,7 +981,8 @@ def get_dutch_data(load_data_size=None):
     for x_var in x_vars_ordinal:
         x = pd.concat([x, normalize(x=df[x_var])], axis=1)
     for x_var in x_vars_categorical:
-        x = pd.concat([x, pd.get_dummies(df[x_var], prefix=x_var, drop_first=False)], axis=1)
+        x = pd.concat([x, pd.get_dummies(df[x_var], prefix=x_var, drop_first=False)],
+                      axis=1)
 
     X = x.to_numpy()
     y = y.to_numpy()
@@ -953,6 +1009,7 @@ def get_dutch_data(load_data_size=None):
     # return X[unique_indices,:], y[unique_indices], s[unique_indices]
     return X, y, s
 
+
 import math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -961,9 +1018,9 @@ from random import seed, shuffle, sample
 from scipy.stats import multivariate_normal
 from scipy.stats import norm as univariate_normal
 
-plt.rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+plt.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
 ## for Palatino and other serif fonts use:
-plt.rc('font',**{'family':'serif','serif':['Palatino']})
+plt.rc('font', **{'family': 'serif', 'serif': ['Palatino']})
 plt.rcParams['text.usetex'] = True
 
 SMALL_SIZE = 37
@@ -972,6 +1029,8 @@ BIGGER_SIZE = 45
 
 MARKER_SIZE = 200
 CROSS_SIZE = 3000
+
+
 #
 # plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
 # plt.rc('axes', titlesize=MEDIUM_SIZE, labelsize=BIGGER_SIZE)     # fontsize of the axes title
@@ -1002,28 +1061,34 @@ def get_gaussian_data(n_samples=None, plot_data=False):
 
     """ Generate the non-sensitive features randomly """
     # We will generate one gaussian cluster for each class
-    mu1, sigma1 = [2, -2], [[1, 0], [0, 1]]  # negative class, negative sens attr (protected)
-    mu2, sigma2 = [4.5, -1.5], [[1, 0], [0, 1]]  # negative class, positive sens attr (unprotected)
+    mu1, sigma1 = [2, -2], [[1, 0],
+                            [0, 1]]  # negative class, negative sens attr (protected)
+    mu2, sigma2 = [4.5, -1.5], [[1, 0], [0,
+                                         1]]  # negative class, positive sens attr (unprotected)
 
     mu3, sigma3 = [3, -1], [[1, 0], [0, 1]]  # positive class, positive sens attr
     mu32, sigma32 = [1, 4], [[0.5, 0], [0, 0.5]]  # positive class, positive sens attr
-    mu4, sigma4 = [2.5, 2.5], [[1, 0], [0, 1]] # positive class, negative sens attr
+    mu4, sigma4 = [2.5, 2.5], [[1, 0], [0, 1]]  # positive class, negative sens attr
 
-    nmb_1, nmb_2 = int(np.floor(n_samples/ 4)), int(np.floor(n_samples/ 8))
+    nmb_1, nmb_2 = int(np.floor(n_samples / 4)), int(np.floor(n_samples / 8))
 
     gap = n_samples - 3 * nmb_1 - 2 * nmb_2
 
-    nv1, X1, y1, s1 = gen_gaussian(mu1, sigma1, -1, -1,  nmb_1)  # negative class, negative sens attr
-    nv2, X2, y2, s2 = gen_gaussian(mu2, sigma2, -1, 1, nmb_1)  # negative class, positive sens attr
+    nv1, X1, y1, s1 = gen_gaussian(mu1, sigma1, -1, -1,
+                                   nmb_1)  # negative class, negative sens attr
+    nv2, X2, y2, s2 = gen_gaussian(mu2, sigma2, -1, 1,
+                                   nmb_1)  # negative class, positive sens attr
 
-    nv3, X3, y3, s3 = gen_gaussian(mu3, sigma3, 1, -1, nmb_2)  # positive class, negative sens attr
-    nv32, X32, y32, s32 = gen_gaussian(mu32, sigma32, 1, -1, nmb_2)  # positive class, negative sens attr
+    nv3, X3, y3, s3 = gen_gaussian(mu3, sigma3, 1, -1,
+                                   nmb_2)  # positive class, negative sens attr
+    nv32, X32, y32, s32 = gen_gaussian(mu32, sigma32, 1, -1,
+                                       nmb_2)  # positive class, negative sens attr
     X3 = np.vstack((X3, X32))
     y3 = np.hstack((y3, y32))
     s3 = np.hstack((s3, s32))
 
-    nv4, X4, y4, s4 = gen_gaussian(mu4, sigma4, 1, 1, nmb_1+gap)  # positive class, positive sens attr
-
+    nv4, X4, y4, s4 = gen_gaussian(mu4, sigma4, 1, 1,
+                                   nmb_1 + gap)  # positive class, positive sens attr
 
     # join the posisitve and negative class clusters
     x_data = np.vstack((X1, X2, X3, X4))
