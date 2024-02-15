@@ -290,7 +290,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', '-dataset',
                         help="numeracy/celeb_multigroup_v4/twitter_hate_speech/adult_multi_group",
                         type=str,
-                        default='numeracy_v2')
+                        default='celeb_multigroup_v5')
 
     parser.add_argument('--positive_model', '-positive_model',
                         help="simple/intermediate/complex",
